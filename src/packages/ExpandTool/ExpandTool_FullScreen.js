@@ -111,21 +111,26 @@ function initHighestVideoQuality() {
 }
 
 function highestVideoQuality() {
-    let highestVideoQualityDomHook = null;
-    gDomObserver.waitForElement('#js-player-controlbar, [class^=controlbar]').then(controlbarContainer => {
-        highestVideoQualityDomHook = new DomHook(controlbarContainer, true, (mutations) => {
-            const qualityContainer = controlbarContainer.querySelector('[class^=tipItem]:has([value^=画质]), [class^=tip]:has([value^=画质])');
-            if (qualityContainer) {
-                const highestQualityOption = qualityContainer.querySelector('ul > li:first-child');
-                if (!highestQualityOption.classList.contains('selected')) {
-                    console.log("DouyuEx 最高画质: 点击highestQualityOption", highestQualityOption);
-                    highestQualityOption.click();
-                } else {
-                    console.log("DouyuEx 最高画质: 保持highestQualityOption", highestQualityOption);
-                }
-                highestVideoQualityDomHook.closeHook();
-                highestVideoQualityDomHook = null;
+    let switchBoxDomHook = null;
+    gDomObserver.waitForElement('[class^="switchBox"]').then(async switchBox => {
+        switchBoxDomHook = new DomHook(switchBox, true, (mutations) => {
+            const reloadDiv = switchBox.querySelector('[class^=reload]');
+            if (reloadDiv && reloadDiv.querySelector('label').textContent.trim() === '重新加载' && reloadDiv.offsetParent !== null) {
+                console.log("DouyuEx 最高画质: 直播流异常，点击reloadDiv", reloadDiv);
+                reloadDiv.click();
+                return;
             }
+        }, true);
+        await gDomObserver.waitForElement('[class^=tipItem]:has([value^=画质]), [class^=tip]:has([value^=画质])').then(qualityContainer => {
+            const highestQualityOption = qualityContainer.querySelector('ul > li:first-child');
+            if (!highestQualityOption.classList.contains('selected')) {
+                console.log("DouyuEx 最高画质: 点击highestQualityOption", highestQualityOption);
+                highestQualityOption.click();
+            } else {
+                console.log("DouyuEx 最高画质: 保持highestQualityOption", highestQualityOption);
+            }
+            switchBoxDomHook.closeHook();
+            switchBoxDomHook = null;
         });
     });
 }
