@@ -111,21 +111,27 @@ function initHighestVideoQuality() {
 }
 
 function highestVideoQuality() {
-    let highestVideoQualityDomHook = null;
-    gDomObserver.waitForElement('#js-player-controlbar, [class^=controlbar]').then(controlbarContainer => {
-        highestVideoQualityDomHook = new DomHook(controlbarContainer, true, (mutations) => {
-            const qualityContainer = controlbarContainer.querySelector('[class^=tipItem]:has([value^=画质]), [class^=tip]:has([value^=画质])');
-            if (qualityContainer) {
-                const highestQualityOption = qualityContainer.querySelector('ul > li:first-child');
-                if (!highestQualityOption.classList.contains('selected')) {
-                    console.log("DouyuEx 最高画质: 点击highestQualityOption", highestQualityOption);
-                    highestQualityOption.click();
-                } else {
-                    console.log("DouyuEx 最高画质: 保持highestQualityOption", highestQualityOption);
-                }
-                highestVideoQualityDomHook.closeHook();
-                highestVideoQualityDomHook = null;
+    if (window._highestQualityLock) return;
+    window._highestQualityLock = true;
+    gDomObserver.waitForElement('.reload-0876b5').then(reloadDiv => {
+        console.log("DouyuEx 最高画质: 检测到reloadDiv，直播已开启", reloadDiv);
+        let reloadDivDomHook = new DomHook(reloadDiv, true, () => {
+            if (reloadDiv.offsetParent !== null) {
+                console.log("DouyuEx 最高画质: 直播流异常，点击reloadDiv", reloadDiv);
+                reloadDiv.click();
+                return;
             }
+        }, true);
+        gDomObserver.waitForElement(".selected-ab049e").then(selectedItem => {
+            const highestQualityOption = selectedItem.parentElement.querySelector(':first-child');
+            if (highestQualityOption !== selectedItem) {
+                console.log("DouyuEx 最高画质: 点击highestQualityOption", highestQualityOption);
+                highestQualityOption.click();
+            } else {
+                console.log("DouyuEx 最高画质: 保持highestQualityOption", highestQualityOption);
+            }
+            reloadDivDomHook.closeHook();
+            reloadDivDomHook = null;
         });
     });
 }
