@@ -1,5 +1,29 @@
 let followListHook;
 function initPkg_FollowList() {
+    (function() {
+        const originalXHROpen = unsafeWindow.XMLHttpRequest.prototype.open;
+        unsafeWindow.XMLHttpRequest.prototype.open = function(method, url, ...args) {
+            if (typeof url === 'string' && url.endsWith('/wgapi/vodnc/center/follow/getSubDynamicVodListWithLive')) {
+                //console.log('DouyuEx 关注列表: 发现视频动态请求，修改URL...');
+                url = url.replace('/getSubDynamicVodListWithLive', '/getSubDynamicVodList');
+                this._isVideoDynamicListTarget = true;
+            }
+            return originalXHROpen.call(this, method, url, ...args);
+        };
+        const originalXHRSend = unsafeWindow.XMLHttpRequest.prototype.send;
+        unsafeWindow.XMLHttpRequest.prototype.send = function(body) {
+            if (this._isVideoDynamicListTarget) {
+                //console.log('DouyuEx 关注列表: 修改视频动态请求上限为20...');
+                try {
+                    body = JSON.stringify({ ...JSON.parse(body || '{}'), limit: 20 });
+                } catch (e) {
+                    console.error('DouyuEx 关注列表: 解析视频动态body失败，使用原始body:', e);
+                }
+            }
+            return originalXHRSend.call(this, body);
+        };
+    })();
+
     let intID = setInterval(() => {
         if (getValidDom([".Header-follow-content", "#js-backpack-enter"])) {
             followListHook = new DomHook(".Header-follow-content", false, handleFollowList);
