@@ -14,21 +14,27 @@ function handleFollowList(m) {
         return;
     }
     // panel.style.marginTop = "12px";
-    const dropPanelRect = panel.closest('.public-DropMenu-drop').getBoundingClientRect();
     const listBoxElement = panel.querySelector(".Header-follow-listBox");
     if (!listBoxElement) {
         return;
     }
-    const listBoxRect = listBoxElement.getBoundingClientRect();
-    const spaceAbove = listBoxRect.top;
-    const spaceBelow = dropPanelRect.bottom - listBoxRect.bottom;
-    const extraOffset = 12;
-    listBoxElement.style.setProperty(
-        'max-height',
-        `calc(100dvh - ${spaceAbove}px - ${spaceBelow}px - ${extraOffset}px)`,
-        'important'
-    );
-    initFollowListInteractions(listBoxElement);
+    listBoxElement.style.setProperty('max-height', 'var(--followlist-max-height)', 'important');
+    new ResizeObserver((entries, observerInstance) => {
+        const boundingBox = entries[0].contentRect;
+        if (boundingBox.width > 0 && boundingBox.height > 0) {
+            observerInstance.disconnect();
+
+            const dropMenuRect = entries[0].target.closest('.public-DropMenu-drop').getBoundingClientRect();
+            const listBoxRect = entries[0].target.getBoundingClientRect();
+            const spaceAbove = listBoxRect.top;
+            const spaceBelow = dropMenuRect.bottom - listBoxRect.bottom;
+            const extraOffset = (document.documentElement.scrollWidth > document.documentElement.clientWidth) ? 15 : 9;
+            const maxHeightValue = `calc(100dvh - ${spaceAbove}px - ${spaceBelow}px - ${extraOffset}px)`;
+            listBoxElement.style.setProperty('--followlist-max-height', maxHeightValue);
+
+            initFollowListInteractions(listBoxElement);
+        }
+    }).observe(listBoxElement);
 }
 
 async function initFollowListInteractions(panel) {
