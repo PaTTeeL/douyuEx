@@ -25,8 +25,9 @@ function initPkg_FollowList() {
     })();
 
     let intID = setInterval(() => {
-        if (getValidDom([".Header-follow-content", "#js-backpack-enter"])) {
-            followListHook = new DomHook(".Header-follow-content", false, handleFollowList);
+        const contentContainer = document.querySelector(".Header-follow-content");
+        if (contentContainer) {
+            followListHook = new DomHook(contentContainer, false, handleFollowList, false);
             clearInterval(intID);
         }
     }, 1000);
