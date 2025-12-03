@@ -1,16 +1,26 @@
 class DomHook {
-    constructor(selector, isSubtree, callback, observeAttributes = false) {
-        this.selector = selector;
-        this.isSubtree = isSubtree;
-        let targetNode = document.querySelector(this.selector);
+    constructor(selectorOrElement, isSubtree, callback, observeAttributes = false) {
+        let targetNode = null;
+        if (typeof selectorOrElement === "string") {
+            targetNode = document.querySelector(selectorOrElement);
+        } else if (selectorOrElement instanceof Element) {
+            targetNode = selectorOrElement;
+        }
         if (targetNode == null) {
             return;
         }
-        let observer = new MutationObserver(function(mutations) {
-            callback(mutations);
+        this.observer = new MutationObserver((mutations) => {
+            if (this.observer) {
+                callback.call(this, mutations);
+            }
         });
-        this.observer = observer;
-        this.observer.observe(targetNode, { attributes: observeAttributes, childList: true, subtree: this.isSubtree });
+        try {
+            this.observer.observe(targetNode, { attributes: observeAttributes, childList: true, subtree: isSubtree });
+        } catch (err) {
+            console.error("DouyuEx DomHook: Failed to observe target node:", targetNode, err);
+            this.observer.disconnect();
+            this.observer = null;
+        }
     }
     closeHook() {
         if (this.observer) {
