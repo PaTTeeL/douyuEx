@@ -1,1 +1,7 @@
-.is-videoDynamic .followlist-tip { display:none!important; }
+.is-videoDynamic .followlist-tip {
+    display:none!important;
+}
+
+.Header-follow-listBox {
+    max-height: var(--followlist-max-height)!important;
+}

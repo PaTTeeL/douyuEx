@@ -1,57 +1,44 @@
-let followListHook;
 function initPkg_FollowList() {
     let intID = setInterval(() => {
-        if (getValidDom([".Header-follow-content", "#js-backpack-enter"])) {
-            followListHook = new DomHook(".Header-follow-content", false, handleFollowList);
-            clearInterval(intID);
-        }
+        const followContent = document.getElementsByClassName("Header-follow-content")[0];
+        if (!followContent) return;
+        clearInterval(intID);
+        new ResizeObserver(entries => {
+            const followListBox = entries[0].target.querySelector(".Header-follow-listBox");
+            if (!followListBox) return;
+            const listBoxRect = followListBox.getBoundingClientRect();
+            const dropMenuRect = followListBox.closest('.public-DropMenu-drop').getBoundingClientRect();
+            const spaceAbove = listBoxRect.top;
+            const spaceBelow = dropMenuRect.bottom - listBoxRect.bottom;
+            const extraOffset = (document.documentElement.scrollWidth > document.documentElement.clientWidth) ? 15 : 9;
+            const maxHeightValue = `calc(100dvh - ${Math.round(spaceAbove + spaceBelow + extraOffset)}px)`;
+            if (maxHeightValue !== followContent.style.getPropertyValue('--followlist-max-height')) {
+                followContent.style.setProperty('--followlist-max-height', maxHeightValue);
+            }
+            initFollowListInteractions(followListBox);
+        }).observe(followContent);
     }, 1000);
 }
 
-function handleFollowList(m) {
-    const panel = m[0].target.querySelector('.Header-follow-listWrap');
-    if (!panel) {
-        return;
-    }
-    // panel.style.marginTop = "12px";
-    const dropPanelRect = panel.closest('.public-DropMenu-drop').getBoundingClientRect();
-    const listBoxElement = panel.querySelector(".Header-follow-listBox");
-    if (!listBoxElement) {
-        return;
-    }
-    const listBoxRect = listBoxElement.getBoundingClientRect();
-    const spaceAbove = listBoxRect.top;
-    const spaceBelow = dropPanelRect.bottom - listBoxRect.bottom;
-    const extraOffset = 12;
-    listBoxElement.style.setProperty(
-        'max-height',
-        `calc(100dvh - ${spaceAbove}px - ${spaceBelow}px - ${extraOffset}px)`,
-        'important'
-    );
-    initFollowListInteractions(listBoxElement);
-}
-
-async function initFollowListInteractions(panel) {
-    const anchors = panel.querySelectorAll(".DropPaneList a[href^='/']");
-    const isVideoDynamicTab = panel.classList.contains("is-videoDynamic");
+async function initFollowListInteractions(followListBox) {
+    const anchors = followListBox.querySelectorAll(".DropPaneList a[href^='/']");
     const loadInCurrentPage = await GM_getValue("Ex_LoadInCurrentPage", false);
 
     anchors.forEach(a => {
         a.target = loadInCurrentPage ? '_self' : '_blank';
-        if (!isVideoDynamicTab && !a.dataset.enhanced) {
+        if (!followListBox.classList.contains("is-videoDynamic") && !a.dataset.enhanced) {
             a.dataset.enhanced = 'true';
             const roomId = a.getAttribute('href').slice(1);
             if (!roomId) return;
-            const cclick = new CClick(a);
-            cclick.longClick(() => {
+            new CClick(a).longClick(() => {
                 createNewVideo(videoPlayerArr.length, roomId, "Douyu");
-                panel.closest(".public-DropMenu").className = "public-DropMenu";
+                followListBox.closest(".public-DropMenu").className = "public-DropMenu";
             });
         }
     });
 
-    if (!panel.querySelector('#followlist-toolbar')) {
-        panel.insertAdjacentHTML(
+    if (!followListBox.querySelector('#followlist-toolbar')) {
+        followListBox.insertAdjacentHTML(
             'afterbegin',
             `<div id="followlist-toolbar" style="color: grey; cursor: default; position: absolute; top: 0px; display: flex; justify-content: space-between; width: 100%; padding: 0 5px; box-sizing: border-box;">
                 <label style="cursor: pointer; display: flex;">
@@ -61,7 +48,7 @@ async function initFollowListInteractions(panel) {
                 <span class="followlist-tip">长按弹出同屏播放</span>
             </div>`
         );
-        const checkbox = panel.querySelector('#loadInCurrentPageCheckbox');
+        const checkbox = followListBox.querySelector('#loadInCurrentPageCheckbox');
         checkbox.checked = loadInCurrentPage;
         checkbox.addEventListener("change", () => {
             const isChecked = checkbox.checked;
