@@ -39,6 +39,34 @@ function renderBarragePanelTip() {
         innerBtnsContainer.insertBefore(a, targetElement);
         innerBtnsContainer.insertBefore(b, a);
     }
+
+    const outerMenuContainer = innerBtnsContainer.parentElement;
+    if (!outerMenuContainer || !outerMenuContainer.style) {
+        return;
+    }
+    const outerRect = outerMenuContainer.getBoundingClientRect();
+    const menuCenterViewportX = outerRect.left + outerRect.width / 2;
+    const menuHalfWidth = innerBtnsContainer.offsetWidth / 2;
+    const initialMenuLeft = menuCenterViewportX - menuHalfWidth;
+    const initialMenuRight = menuCenterViewportX + menuHalfWidth;
+
+    const playerContainer = getValidDom(['#js-player-main', '.main__a3F0Y']);
+    const boundaryElement = playerContainer || document.documentElement;
+    const boundaryRect = boundaryElement.getBoundingClientRect();
+    let boundaryLeft = boundaryRect.left;
+    let boundaryRight = boundaryRect.right;
+    if (!playerContainer && document.documentElement.scrollWidth > document.documentElement.clientWidth) {
+        const SCROLLBAR_OFFSET = 18;
+        boundaryRight -= SCROLLBAR_OFFSET;
+    }
+
+    let offsetX = 0;
+    if (initialMenuLeft < boundaryLeft) {
+        offsetX = boundaryLeft - initialMenuLeft; // 菜单左侧溢出，向右移动
+    } else if (initialMenuRight > boundaryRight) {
+        offsetX = boundaryRight - initialMenuRight; // 菜单右侧溢出，向左移动
+    }
+    innerBtnsContainer.style.transform = `translateX(calc(-50% + ${offsetX}px))`;
 }
 
 function setBarragePanelTipFunc() {
