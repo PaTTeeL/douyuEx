@@ -16,25 +16,29 @@ function setBarragePanelTipCallBack() {
 }
 
 function renderBarragePanelTip() {
-    let a = document.createElement("div");
-    a.style.display = "inline-block";
-
-    const labelDoms = document.getElementsByClassName("labelfisrt-407af4");
-    if (labelDoms.length === 0) return;
-    const dom = labelDoms[0].parentElement;
-    dom.appendChild(a);
-
-
-    a = document.createElement("p");
+    const a = document.createElement("p");
     a.className = "sugun-e3fbf6";
     a.innerText = "|";
-    dom.appendChild(a);
 
-    a = document.createElement("div");
-    a.className = "labelfisrt-407af4 thirdBtn-06cde5 fourBtn-0845d4";
-    a.id = "barrage-panel-tip__+1"
-    a.innerText = "+1";
-    dom.appendChild(a);
+    const b = document.createElement("div");
+    b.className = "labelfisrt-407af4 thirdBtn-06cde5 fourBtn-0845d4";
+    b.id = "barrage-panel-tip__+1"
+    b.innerText = "+1";
+
+    const labelDoms = document.getElementsByClassName("labelfisrt-407af4");
+    if (labelDoms.length === 0) {
+        return;
+    }
+    const innerBtnsContainer = labelDoms[0].parentElement;
+    if (labelDoms.length < 3) {
+        const targetElement = labelDoms[0];
+        innerBtnsContainer.insertBefore(a, targetElement.nextSibling);
+        innerBtnsContainer.insertBefore(b, a.nextSibling);
+    } else {
+        const targetElement = labelDoms[labelDoms.length - 2];
+        innerBtnsContainer.insertBefore(a, targetElement);
+        innerBtnsContainer.insertBefore(b, a);
+    }
 }
 
 function setBarragePanelTipFunc() {
