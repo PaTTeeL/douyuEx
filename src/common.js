@@ -133,12 +133,12 @@ function setCookie(cookiename, value){
 }
 
 function getCookieValue(name){
-   let arr,reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
-    if (arr = document.cookie.match(reg)) {
-        return unescape(arr[2]);
-    } else {
-        return null;
-    }
+	let arr,reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+	if (arr = document.cookie.match(reg)) {
+		return unescape(arr[2]);
+	} else {
+		return null;
+	}
 }
 function getCCN() {
 	// let cookie = document.cookie;
@@ -224,11 +224,15 @@ function dateFormat(fmt, date) {
 		"q+": Math.floor((date.getMonth() + 3) / 3),
 		"S": date.getMilliseconds()
 	};
-	if (/(y+)/.test(fmt))
-		fmt = fmt.replace(RegExp.$1, (date.getFullYear() + "").substr(4 - RegExp.$1.length));
-	for (let k in o)
-		if (new RegExp("(" + k + ")").test(fmt))
-			fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+	fmt = fmt.replace(/(y+)/, (match, group) => {
+		return (date.getFullYear() + "").slice(4 - group.length);
+	});
+	for (let k in o) {
+		fmt = fmt.replace(new RegExp("(" + k + ")"), (match, group) => {
+			const val = o[k];
+			return group.length === 1 ? val : val.padStart(group.length, "0");
+		});
+	}
 	return fmt;
 }
 
@@ -282,7 +286,7 @@ function showMessageWindow(title, content, callback){
         Notification.requestPermission(function(status) {
             var notice_ = new Notification(title, { body: content });
             notice_.onclick = function() {
-				callback();
+                callback();
             }
         });
     }   
@@ -313,13 +317,11 @@ function getTextareaPosition(element) {
 	}
 	// 否则处理为contenteditable元素
 	let cursorPos = 0;
-	
 	// 兼容旧版IE
 	if (document.selection) {
 			const selectRange = document.selection.createRange();
 			const textRange = element.createTextRange();
 			const preCaretRange = textRange.duplicate();
-			
 			preCaretRange.moveToBookmark(selectRange.getBookmark());
 			preCaretRange.setEndPoint('EndToEnd', textRange);
 			cursorPos = preCaretRange.text.length;
@@ -327,17 +329,14 @@ function getTextareaPosition(element) {
 	// 现代浏览器
 	else if (window.getSelection) {
 			const selection = window.getSelection();
-			
 			if (selection.rangeCount > 0) {
 					const range = selection.getRangeAt(0).cloneRange();
 					range.selectNodeContents(element);
 					range.setEnd(selection.rangeCount > 0 ? selection.getRangeAt(0).endContainer : element, 
 											selection.rangeCount > 0 ? selection.getRangeAt(0).endOffset : 0);
-					
 					cursorPos = range.toString().length;
 			}
 	}
-	
 	return cursorPos;
 }
 
@@ -403,15 +402,11 @@ function debounce(func, wait) {
     return function() {
       let context = this;
       let args = arguments;
- 
       if (timer) clearTimeout(timer);
- 
       let callNow = !timer;
- 
       timer = setTimeout(() => {
         timer = null;
       }, wait)
- 
       if (callNow) func.apply(context, args);
     }
 }
@@ -465,9 +460,11 @@ function sheet2blob(sheet, sheetName) {
 	var blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
 	// 字符串转ArrayBuffer
 	function s2ab(s) {
-		var buf = new ArrayBuffer(s.length);
+		if (typeof s !== 'string') return new ArrayBuffer(0);
+		var length = s.length;
+		var buf = new ArrayBuffer(length);
 		var view = new Uint8Array(buf);
-		for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+		for (var i = 0; i < length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
 		return buf;
 	}
 	return blob;
@@ -480,7 +477,7 @@ function downloadFile(name, data) {
     save_link.href = urlObject.createObjectURL(export_blob);
     save_link.download = name;
 
-	var ev = document.createEvent("MouseEvents");
+    var ev = document.createEvent("MouseEvents");
     ev.initMouseEvent("click", true, false, unsafeWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
     save_link.dispatchEvent(ev);
 	var blobHref = save_link.href;
@@ -495,12 +492,12 @@ function downloadFile(name, data) {
 
 function timeText2Ms(text) {
 	let ret = 0;
-	let arr = text.split(":");
-	if (arr.length === 1) {
+	let arr = text.split(":"), length = arr.length;
+	if (length === 1) {
 		ret = Number(arr[0]);
-	} else if (arr.length === 2) {
+	} else if (length === 2) {
 		ret = Number(arr[0]) * 60 + Number(arr[1]);
-	} else if (arr.length === 3) {
+	} else if (length === 3) {
 		ret = Number(arr[0]) * 3600 + Number(arr[1]) * 60 + Number(arr[2]);
 	}
 	return ret * 1000;
@@ -531,16 +528,19 @@ function getCsrfToken() {
       onload: function(response) {
         // 获取 Set-Cookie
         const setCookie = response.responseHeaders.match(/set-cookie:[^\n\r]+/gi);
-				// 从set-cookie中获取csrfToken
-				let csrfToken = "";
-				for (const line of setCookie) {
-					const match = line.match(/cvl_csrf_token=([^;]+)/);
-					if (match) {
-						csrfToken = match[1]; // 返回提取到的 token
-						break;
-					}
-				}
-				resolve(csrfToken);
+        // 从set-cookie中获取csrfToken
+        let csrfToken = "";
+        if (setCookie) {
+          for (let i = 0, len = setCookie.length; i < len; i++) {
+            const line = setCookie[i];
+            const match = line.match(/cvl_csrf_token=([^;]+)/);
+            if (match) {
+              csrfToken = match[1]; // 返回提取到的 token
+              break;
+            }
+          }
+        }
+        resolve(csrfToken);
       },
       onerror: function(err) {
         resolve("");
@@ -574,3 +574,233 @@ function getValidDomList(queryList) {
 	}
 	return [];
 }
+
+/*
+ * gDomObserver - 全局 DOM 观察服务单例：
+ *   - 复用单个 MutationObserver 实例观察 DOM 结构变化，避免重复创建观察器；
+ *   - 提供 waitForElement(selector, timeout) 方法，返回 Promise，目标元素出现时 resolve，选择器无效或超时则 reject；
+ *   - 提供 raceForElement(selectors, timeout) 方法，返回 Promise，最先出现的元素 resolve，选择器数组为空或超时则 reject；
+ *   - 使用 Map 统一管理所有等待任务，相同 selector 的调用合并至同一等待组，DOM 变化时批量检查；
+ *   - 按需启动观察服务以节省资源，任务全部完成时自动停止。
+ */
+const gDomObserver = (() => {
+    let _observer = null, _rafId = null, _debug = false;
+    const _log = (...a) => _debug && console.log ("[gDomObserver]", ...a);
+    const _warn = (...a) => _debug && console.warn ("[gDomObserver]", ...a);
+    const _error = (...a) => _debug && console.error("[gDomObserver]", ...a);
+    const _pendingMap = new Map();
+    class Task {
+        constructor(deadline, resolve, reject) {
+            this.deadline = deadline;
+            this.resolve = resolve;
+            this.reject = reject;
+        }
+    }
+    function _disconnect() {
+        if (_pendingMap.size === 0 && _observer) {
+            _observer.disconnect();
+            _observer = null;
+            if (_rafId) {
+                cancelAnimationFrame(_rafId);
+                _rafId = null;
+            }
+            _log("DouyuEX gDomObserver: 所有任务完成，停止观察实例");
+        }
+    }
+    function _parseTimeout(timeout) {
+        if (timeout == null) return null;
+        if (typeof timeout === "number") return timeout >= 0 ? timeout : null;
+        if (typeof timeout === "string") {
+            const num = parseFloat(timeout);
+            if (isNaN(num) || num < 0) return null;
+            if (/^\s*\d+(\.\d+)?\s*(s|sec|second|seconds)$/i.test(timeout)) return num * 1000;
+            if (/^\s*\d+(\.\d+)?\s*(m|min|minute|minutes)$/i.test(timeout)) return num * 60000;
+            return num; // 默认 ms
+        }
+        return null;
+    }
+    function _checkElements() {
+        if (_rafId) cancelAnimationFrame(_rafId);
+        _rafId = requestAnimationFrame(() => {
+            const current = performance.now();
+            for (const [selector, group] of _pendingMap) {
+                const element = document.querySelector(selector);
+                for (const task of group.tasks) {
+                    if (current >= task.deadline) {
+                        _warn("DouyuEX gDomObserver: 计时到达上限，终止等待任务", selector);
+                        task.reject(new Error(`DouyuEX waitForElement: Timeout - "${selector}"`));
+                        group.tasks.delete(task);
+                    } else if (element) {
+                        _log("DouyuEX gDomObserver: 目标元素出现，完成等待任务", element);
+                        task.resolve(element);
+                        group.tasks.delete(task);
+                    }
+                }
+                if (group.tasks.size === 0) _pendingMap.delete(selector);
+            }
+            _disconnect();
+            _rafId = null;
+        });
+    }
+    return {
+        /*
+         * 异步等待指定选择器对应的元素出现在 DOM 中：
+         *   @description
+         *     - 选择器无效时，不创建监听任务，直接以 rejected 状态返回 Promise；
+         *     - 若元素已存在，不创建监听任务，直接以 resolved 状态返回 Promise；
+         *     - 若元素不存在，则使用 MutationObserver 监听 DOM 变化，元素出现时 resolve，超时或外部中止则 reject；
+         *     - 相同 selector 的调用合并至同一等待组，各自持有独立的 Promise 和超时设定；
+         *     - 未设置超时或传入 null 的任务将无限等待直到元素出现。
+         *   @param {string} selector - CSS 选择器字符串
+         *   @param {null|number|string} timeout - 超时时长：
+         *     - `null`：永不超时（默认）；
+         *     - `number`：毫秒数，0 表示立即超时，负数则永不超时；
+         *     - `string`：支持 `ms`、`s`、`m`，例如 `"500ms"`、`"2s"`、`"1m"`，解析为 0 则立即超时，负数或无法解析则永不超时。
+         *   @param {null|AbortSignal} signal - 可选的中止信号，触发后以 AbortError 拒绝 Promise
+         *   @returns {Promise<Element>} - 目标元素出现时 resolve，选择器无效、超时或外部中止则 reject
+         *   @example
+         *     const controller = new AbortController();
+         *     gDomObserver.waitForElement('#id', 5000, controller.signal) // 等待 5 秒
+         *         .then(element => { console.log('元素已出现:', element); })
+         *         .catch(error => { console.error('选择器无效、等待超时或已取消:', error); });
+         *     // 主动取消：
+         *     controller.abort();
+         */
+        waitForElement(selector, timeout = null, signal = null) {
+            if (signal && signal.aborted) {
+                _warn("DouyuEX gDomObserver: 信号已中止，拒绝创建任务", selector);
+                return Promise.reject(signal.reason || new DOMException("Aborted", "AbortError"));
+            }
+            const selectorTrimmed = typeof selector === "string" ? selector.trim() : "";
+            if (!selectorTrimmed) {
+                console.error("DouyuEX gDomObserver: 空白的选择器，拒绝创建任务", selector);
+                return Promise.reject(new Error(`DouyuEX waitForElement: Empty selector - "${selector}"`));
+            }
+            let element;
+            try {
+                element = document.querySelector(selectorTrimmed);
+            } catch (err) {
+                _error("DouyuEX gDomObserver: 非法的选择器，拒绝创建任务", selector, err);
+                return Promise.reject(new Error(`DouyuEX waitForElement: Invalid selector - "${selector}", ${err.message}`));
+            }
+            const existing = _pendingMap.get(selectorTrimmed);
+            if (element) {
+                if (existing) {
+                    _log("DouyuEX gDomObserver: 目标元素存在，完成已有任务", element);
+                    for (const task of existing.tasks) task.resolve(element);
+                    _pendingMap.delete(selectorTrimmed);
+                    _disconnect();
+                } else {
+                    _log("DouyuEX gDomObserver: 目标元素存在，直接返回结果", element);
+                }
+                return Promise.resolve(element);
+            }
+            const parsedTimeout = _parseTimeout(timeout), current = performance.now();
+            if (parsedTimeout === 0) {
+                return Promise.reject(new Error(`DouyuEX waitForElement: Timeout (immediate) - "${selectorTrimmed}"`));
+            }
+            const deadline = parsedTimeout == null ? Infinity : current + parsedTimeout;
+            const deadlineLabel = parsedTimeout == null ? "等待不限时长" : `等待时长: ${parsedTimeout}ms`;
+            let resolveFn, rejectFn;
+            const promise = new Promise((resolve, reject) => { resolveFn = resolve; rejectFn = reject; });
+            const task = new Task(deadline, resolveFn, rejectFn);
+            if (signal) {
+                signal.addEventListener("abort", () => {
+                    _warn("DouyuEX gDomObserver: 收到外部信号，终止等待任务", selectorTrimmed);
+                    task.reject(signal.reason || new DOMException("Aborted", "AbortError"));
+                    const group = _pendingMap.get(selectorTrimmed);
+                    if (!group) return;
+                    group.tasks.delete(task);
+                    if (group.tasks.size === 0) _pendingMap.delete(selectorTrimmed);
+                    _disconnect();
+                }, { once: true });
+            }
+            if (existing) {
+                _log("DouyuEX gDomObserver: 等待元素相同，添加新的任务", selectorTrimmed, deadlineLabel);
+                existing.tasks.add(task);
+            } else {
+                _pendingMap.set(selectorTrimmed, { tasks: new Set([task]) });
+                if (!_observer) {
+                    const root = document.body || document.documentElement || document;
+                    _observer = new MutationObserver(_checkElements);
+                    _observer.observe(root, { childList: true, subtree: true });
+                    _log("DouyuEX gDomObserver: 启动观察实例，创建首个任务", selectorTrimmed, deadlineLabel);
+                } else {
+                    _log("DouyuEX gDomObserver: 复用观察实例，加入任务队列", selectorTrimmed, deadlineLabel);
+                }
+            }
+            return promise;
+        },
+        /*
+         * 异步等待多个选择器中“最先出现”的那个元素：
+         *   @description
+         *     - 为各 selector 创建独立的等待任务，共享同一个 AbortController；
+         *     - 超时统一由竞速层管理，与各等待任务的生命周期完全独立；
+         *     - 任意元素率先出现后，立即取消其余所有等待任务；
+         *     - 竞速超时后立即取消所有等待任务并 reject。
+         *   @param {string[]} selectors - CSS 选择器数组，例如 `["#id", ".item", "[data-x]"]`
+         *     - 每个选择器独立等待，竞速结果返回最先出现的元素。
+         *   @param {null|number|string} timeout - 超时时长，格式与 waitForElement 的 timeout 相同
+         *   @returns {Promise<{selector: string, element: Element}>} - 返回的 Promise 中包含：
+         *     - `selector`：最先出现元素对应的选择器；
+         *     - `element`：最先出现的元素对象。
+         *   @example
+         *     gDomObserver.raceForElement([".a", ".b"], 90000)
+         *         .then(({ selector, element }) => { console.log("最先出现的是:", selector, element); })
+         *         .catch(error => { console.error("竞速失败:", error); });
+         */
+        raceForElement(selectors, timeout = null) {
+            if (!Array.isArray(selectors) || selectors.length === 0) {
+                _error("DouyuEX gDomObserver: 无效的选择器，竞速任务中止");
+                return Promise.reject(new Error(`DouyuEX raceForElement: Empty array of selectors - ${selectors}`));
+            }
+            const controller = new AbortController(), parsedTimeout = _parseTimeout(timeout);
+            let finished = false, rejectedCount = 0, timeoutId = null;
+            _log("DouyuEX gDomObserver: 启动竞速任务，等待元素列表", selectors);
+            return new Promise((resolve, reject) => {
+                if (parsedTimeout != null) {
+                    timeoutId = setTimeout(() => {
+                        if (finished) return;
+                        finished = true;
+                        _warn("DouyuEX gDomObserver: 超过最大时长，竞速任务失败");
+                        const timeoutError = new Error(`DouyuEX raceForElement: No elements appeared within the timeout - ${selectors}`);
+                        controller.abort(timeoutError);
+                        reject(timeoutError);
+                    }, parsedTimeout);
+                }
+                for (const selector of selectors) {
+                    this.waitForElement(selector, null, controller.signal).then(element => {
+                        if (finished) return;
+                        finished = true;
+                        clearTimeout(timeoutId);
+                        _log("DouyuEX gDomObserver: 竞速任务完成，首先出现元素", selector, element);
+                        controller.abort();
+                        resolve({ selector, element });
+                    }).catch(err => {
+                        if (finished) return;
+                        if (++rejectedCount === selectors.length) {
+                            finished = true;
+                            clearTimeout(timeoutId);
+                            _warn("DouyuEX gDomObserver: 无效的选择器，竞速任务失败", err);
+                            reject(new Error(`DouyuEX raceForElement: All selectors are invalid - ${selectors}`));
+                        }
+                    });
+                }
+            });
+        },
+        /*
+         * 设置调试日志的开关状态：
+         *   @description
+         *     - 默认关闭，所有内部日志（log / warn / error）均不输出；
+         *     - 开启后，内部运行状态、任务创建、元素匹配、超时及中止等事件均会输出至控制台；
+         *     - 可在任意时刻调用，实时生效，不影响已有的等待任务。
+         *   @param {any} enabled - 是否开启调试日志，传入任意真值开启，假值关闭
+         *   @returns {void}
+         *   @example
+         *     gDomObserver.setDebug(true);  // 开启，输出所有内部日志
+         *     gDomObserver.setDebug(false); // 关闭，静默运行（默认）
+         */
+        setDebug(enabled) { _debug = !!enabled; },
+    };
+})();
+
