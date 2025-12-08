@@ -58,22 +58,17 @@ function initFullScreen() {
 
 function fullScreen() {
     let fullScreenDomHook = null;
-    const intID1 = setInterval(() => {
-        const controlbarContainer = document.querySelector('#js-player-controlbar, [class^=controlbar]');
-        if (controlbarContainer) {
-            clearInterval(intID1);
-            fullScreenDomHook = new DomHook(controlbarContainer, true, (mutations) => {
-                const fullScreenButton = controlbarContainer.querySelector('.wfs-2a8e83, [class^=icon]:has([d="M20 25h6v-6M14 7H8v6"])');
-                if (fullScreenButton) {
-                    console.log("DouyuEx: 触发自动网页全屏并停止监听", fullScreenButton);
-                    fullScreenButton.click();
-                    fullScreenDomHook.closeHook();
-                    fullScreenDomHook = null;
-                }
-            });
-            console.log("DouyuEx: 启动自动网页全屏监听:", controlbarContainer);
-        }
-    }, 1000);
+    gDomObserver.waitForElement('#js-player-controlbar, [class^=controlbar]').then(controlbarContainer => {
+        fullScreenDomHook = new DomHook(controlbarContainer, true, (mutations) => {
+            const fullScreenButton = controlbarContainer.querySelector('.wfs-2a8e83, [class^=icon]:has([d="M20 25h6v-6M14 7H8v6"])');
+            if (fullScreenButton) {
+                console.log("DouyuEx 网页全屏: 点击fullScreenButton按钮", fullScreenButton);
+                fullScreenButton.click();
+                fullScreenDomHook.closeHook();
+                fullScreenDomHook = null;
+            }
+        });
+    });
 }
 
 function getHighestVideoQuality() {
@@ -117,21 +112,20 @@ function initHighestVideoQuality() {
 
 function highestVideoQuality() {
     let highestVideoQualityDomHook = null;
-    const intID1 = setInterval(() => {
-        const controlbarContainer = document.querySelector('#js-player-controlbar, [class^=controlbar]');
-        if (controlbarContainer) {
-            clearInterval(intID1);
-            highestVideoQualityDomHook = new DomHook(controlbarContainer, true, (mutations) => {
-                const qualityContainer = controlbarContainer.querySelector('[class^=tipItem]:has([value^=画质]), [class^=tip]:has([value^=画质])');
-                if (qualityContainer) {
-                    const highestQualityOption = qualityContainer.querySelector('ul > li:first-child');
-                    if (highestQualityOption && !highestQualityOption.classList.contains('selected')) {
-                        highestQualityOption.click();
-                    }
-                    highestVideoQualityDomHook.closeHook();
-                    highestVideoQualityDomHook = null;
+    gDomObserver.waitForElement('#js-player-controlbar, [class^=controlbar]').then(controlbarContainer => {
+        highestVideoQualityDomHook = new DomHook(controlbarContainer, true, (mutations) => {
+            const qualityContainer = controlbarContainer.querySelector('[class^=tipItem]:has([value^=画质]), [class^=tip]:has([value^=画质])');
+            if (qualityContainer) {
+                const highestQualityOption = qualityContainer.querySelector('ul > li:first-child');
+                if (!highestQualityOption.classList.contains('selected')) {
+                    console.log("DouyuEx 最高画质: 点击highestQualityOption", highestQualityOption);
+                    highestQualityOption.click();
+                } else {
+                    console.log("DouyuEx 最高画质: 保持highestQualityOption", highestQualityOption);
                 }
-            });
-        }
-    }, 1000);
+                highestVideoQualityDomHook.closeHook();
+                highestVideoQualityDomHook = null;
+            }
+        });
+    });
 }
