@@ -538,3 +538,50 @@ function getValidDomList(queryList) {
 	}
 	return [];
 }
+
+/*
+ * gDomObserver - 一个全局单例模块，用于高效地等待DOM元素出现。
+ * 它在内部只使用一个 MutationObserver 单例来处理所有等待任务。
+ */
+const gDomObserver = (function() {
+    let _observer = null;
+    let listeners = [];
+    function _checkElements() {
+        for (let i = listeners.length - 1; i >= 0; i--) {
+            const listener = listeners[i];
+            const element = document.querySelector(listener.selector);
+            if (element) {
+                listener.resolve(element);
+                listeners.splice(i, 1);
+            }
+        }
+
+        if (listeners.length === 0 && _observer) {
+            _observer.disconnect();
+            _observer = null;
+        }
+    }
+    return {
+        /*
+         * 异步等待一个元素出现。
+         * @param {string} selector - CSS 选择器。
+         * @returns {Promise<Element>}
+         */
+        waitForElement(selector) {
+            const existingElement = document.querySelector(selector);
+            if (existingElement) {
+                return Promise.resolve(existingElement);
+            }
+            return new Promise((resolve) => {
+                listeners.push({ selector, resolve });
+                if (!_observer) {
+                    _observer = new MutationObserver(_checkElements);
+                    _observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+            });
+        }
+    };
+})();
