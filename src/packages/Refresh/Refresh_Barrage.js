@@ -1,55 +1,56 @@
 let current_barrage_status = 0; // 0没被简化 1被简化
 
 function initPkg_Refresh_Barrage() {
-	initPkg_Refresh_Barrage_Dom();
-    initPkg_Refresh_Barrage_Func();
-    initPkg_Refresh_Barrage_Set();
+    Promise.all([
+        gDomObserver.waitForElement('.Barrage-toolbar'),
+        gDomObserver.waitForElement('.layout-Player-rank')
+    ]).then(([toolbar, dom_rank]) => {
+        initPkg_Refresh_Barrage_Dom(toolbar);
+        initPkg_Refresh_Barrage_Func(toolbar, dom_rank);
+        initPkg_Refresh_Barrage_Set(toolbar, dom_rank);
+    });
 }
 
-function initPkg_Refresh_Barrage_Dom() {
-	Refresh_Barrage_insertIcon();
-}
-function Refresh_Barrage_insertIcon() {
-	let a = document.createElement("a");
-    a.className = "refresh-barrage";
-    a.id = "refresh-barrage";
-	a.innerHTML = '<svg t="1588051109604" id="refresh-barrage__svg" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3095" width="16" height="16"><path d="M588.416 516.096L787.2 317.312a54.016 54.016 0 1 0-76.416-76.416L512 439.68 313.216 241.024A54.016 54.016 0 1 0 236.8 317.376l198.784 198.848-198.016 197.888a54.016 54.016 0 1 0 76.416 76.416L512 592.576l197.888 197.952a54.016 54.016 0 1 0 76.416-76.416L588.416 516.096z" fill="#AFAFAF" p-id="3096"></path></svg><i class="Barrage-toolbarIcon"></i><span id="refresh-barrage__text" class="Barrage-toolbarText">前缀</span>';
-
-	let b = document.createElement("a");
-    b.className = "Barrage-toolbarLock";
-    b.id = "refresh-barrage-frame";
-	b.innerHTML = '<i class="Barrage-toolbarIcon"></i><span id="refresh-barrage-frame__text" class="Barrage-toolbarText">拉高</span>';
-	let c = document.getElementsByClassName("Barrage-toolbar")[0];
-	c.prepend(a, b);
+function initPkg_Refresh_Barrage_Dom(toolbar) {
+    if (!toolbar.querySelector(".refresh-barrage")) {
+        toolbar.insertAdjacentHTML(
+            "afterbegin",
+            `<a class="refresh-barrage" id="refresh-barrage">
+                <svg t="1588051109604" id="refresh-barrage__svg" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3095" width="16" height="16"><path d="M588.416 516.096L787.2 317.312a54.016 54.016 0 1 0-76.416-76.416L512 439.68 313.216 241.024A54.016 54.016 0 1 0 236.8 317.376l198.784 198.848-198.016 197.888a54.016 54.016 0 1 0 76.416 76.416L512 592.576l197.888 197.952a54.016 54.016 0 1 0 76.416-76.416L588.416 516.096z" fill="#AFAFAF" p-id="3096"></path></svg><i class="Barrage-toolbarIcon"></i><span id="refresh-barrage__text" class="Barrage-toolbarText">前缀</span>
+            </a>
+            <a class="Barrage-toolbarLock" id="refresh-barrage-frame">
+                <i class="Barrage-toolbarIcon"></i><span id="refresh-barrage-frame__text" class="Barrage-toolbarText">拉高</span>
+            </a>`
+        );
+    }
 }
 
-function initPkg_Refresh_Barrage_Func() {
-	document.getElementById("refresh-barrage").addEventListener("click", function() {
+function initPkg_Refresh_Barrage_Func(toolbar, dom_rank) {
+    toolbar.querySelector("#refresh-barrage").addEventListener("click", function() {
         if (current_barrage_status == 0) {
             // 简化
-            setRefreshBarrage();
+            setRefreshBarrage(toolbar);
         } else {
-            cancelRefreshBarrage();
+            cancelRefreshBarrage(toolbar);
         }
         saveData_Refresh();
     });
 
-    document.getElementById("refresh-barrage-frame").addEventListener("click", function() {
-        let dom_rank = document.getElementsByClassName("layout-Player-rank")[0];
+    toolbar.querySelector("#refresh-barrage-frame").addEventListener("click", function() {
         let dom_activity = document.getElementById("js-room-activity");
-        let dom_topBarrage = document.getElementsByClassName("Barrage")[0];
+        let dom_topBarrage = toolbar.closest('.Barrage');
         if (dom_rank.style.display == "none") {
             // 被拉高
             dom_rank.style.display = "block";
             dom_activity.style.display = "block";
             dom_topBarrage.className = "Barrage";
-            document.getElementById("refresh-barrage-frame__text").innerText = "拉高";
+            toolbar.querySelector("#refresh-barrage-frame__text").innerText = "拉高";
         } else {
             // 没拉高
             dom_rank.style.display = "none";
             dom_activity.style.display = "none";
             dom_topBarrage.className = "Barrage top-0-important";
-            document.getElementById("refresh-barrage-frame__text").innerText = "恢复";
+            toolbar.querySelector("#refresh-barrage-frame__text").innerText = "恢复";
         }
         saveData_Refresh();
     });
@@ -76,7 +77,7 @@ function refresh_BarrageFrame_getStatus() {
     }
 }
 
-function initPkg_Refresh_Barrage_Set() {
+function initPkg_Refresh_Barrage_Set(toolbar, dom_rank) {
     let ret = localStorage.getItem("ExSave_Refresh");
     if (ret != null) {
         let retJson = JSON.parse(ret);
@@ -84,22 +85,21 @@ function initPkg_Refresh_Barrage_Set() {
             retJson.barrage = {status: false};
         }
         if (retJson.barrage.status == true) {
-            setRefreshBarrage();
+            setRefreshBarrage(toolbar);
         }
         if ("barrageFrame" in retJson == false) {
             retJson.barrageFrame = {status: false};
         }
         if (retJson.barrageFrame.status == true) {
-            let dom_rank = document.getElementsByClassName("layout-Player-rank")[0];
             let dom_activity = document.getElementById("js-room-activity");
             dom_rank.style.display = "none";
             dom_activity.style.display = "none";
-            document.getElementById("refresh-barrage-frame__text").innerText = "恢复";
+            toolbar.querySelector("#refresh-barrage-frame__text").innerText = "恢复";
         }
     }
 }
  
-function setRefreshBarrage() {
+function setRefreshBarrage(toolbar) {
     let cssText = `
     .UserCsgoGameDataMedal,.Barrage-honor,.Barrage-listItem .Barrage-icon,.Barrage-listItem .FansMedal.is-made,.Barrage-listItem .RoomLevel,.Barrage-listItem .Motor,.Barrage-listItem .ChatAchievement,.Barrage-listItem .Barrage-hiIcon,.Barrage-listItem .Medal,.Barrage-listItem .MatchSystemTeamMedal{display:none !important;}
     /*.Barrage-listItem .UserLevel{display:none !important;}*/
@@ -108,13 +108,13 @@ function setRefreshBarrage() {
     `;
     StyleHook_set("Ex_Style_RefreshBarrage", cssText);
     current_barrage_status = 1;
-    document.getElementById("refresh-barrage").style.backgroundColor = "rgb(18,150,219)";
-    document.getElementById("refresh-barrage__text").style.color = "#fff";
+    toolbar.querySelector("#refresh-barrage").style.backgroundColor = "rgb(18,150,219)";
+    toolbar.querySelector("#refresh-barrage__text").style.color = "#fff";
 }
 
-function cancelRefreshBarrage() {
+function cancelRefreshBarrage(toolbar) {
     StyleHook_remove("Ex_Style_RefreshBarrage");
     current_barrage_status = 0;
-    document.getElementById("refresh-barrage").style.backgroundColor = "";
-    document.getElementById("refresh-barrage__text").style.color = "";
+    toolbar.querySelector("#refresh-barrage").style.backgroundColor = "";
+    toolbar.querySelector("#refresh-barrage__text").style.color = "";
 }
