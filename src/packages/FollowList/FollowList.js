@@ -23,10 +23,7 @@ function initPkg_FollowList() {
         };
     })();
 
-    let intID = setInterval(() => {
-        const followContent = document.getElementsByClassName("Header-follow-content")[0];
-        if (!followContent) return;
-        clearInterval(intID);
+    gDomObserver.waitForElement('.Header-follow-content').then(followContent => {
         new ResizeObserver(entries => {
             const followListBox = entries[0].target.querySelector(".Header-follow-listBox");
             if (!followListBox) return;
@@ -41,7 +38,7 @@ function initPkg_FollowList() {
             }
             initFollowListInteractions(followListBox);
         }).observe(followContent);
-    }, 1000);
+    }, 30000);
 }
 
 async function initFollowListInteractions(followListBox) {
