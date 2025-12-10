@@ -1,15 +1,17 @@
 let current_barrage_status = 0; // 0没被简化 1被简化
 
 function initPkg_Refresh_Barrage() {
-	initPkg_Refresh_Barrage_Dom();
-    initPkg_Refresh_Barrage_Func();
-    initPkg_Refresh_Barrage_Set();
+    Promise.all([
+        gDomObserver.waitForElement('.Barrage-toolbar'),
+        gDomObserver.waitForElement('.layout-Player-rank')
+    ]).then(([toolbar, dom_rank]) => {
+        initPkg_Refresh_Barrage_Dom(toolbar);
+        initPkg_Refresh_Barrage_Func(toolbar, dom_rank);
+        initPkg_Refresh_Barrage_Set();
+    });
 }
 
-function initPkg_Refresh_Barrage_Dom() {
-	Refresh_Barrage_insertIcon();
-}
-function Refresh_Barrage_insertIcon() {
+function initPkg_Refresh_Barrage_Dom(toolbar) {
 	let a = document.createElement("a");
     a.className = "refresh-barrage";
     a.id = "refresh-barrage";
@@ -19,13 +21,12 @@ function Refresh_Barrage_insertIcon() {
     b.className = "Barrage-toolbarLock";
     b.id = "refresh-barrage-frame";
 	b.innerHTML = '<i class="Barrage-toolbarIcon"></i><span id="refresh-barrage-frame__text" class="Barrage-toolbarText">拉高</span>';
-	let c = document.getElementsByClassName("Barrage-toolbar")[0];
-	c.prepend(a, b);
+
+	toolbar.prepend(a, b);
 }
 
-function initPkg_Refresh_Barrage_Func() {
-	document.getElementById("refresh-barrage-frame").addEventListener("click", function() {
-        let dom_rank = document.getElementsByClassName("layout-Player-rank")[0];
+function initPkg_Refresh_Barrage_Func(toolbar, dom_rank) {
+	toolbar.querySelector("#refresh-barrage-frame").addEventListener("click", function() {
         let dom_activity = document.getElementById("js-room-activity");
         let dom_topBarrage = document.getElementsByClassName("Barrage")[0];
         if (dom_rank.style.display == "none") {
@@ -45,7 +46,7 @@ function initPkg_Refresh_Barrage_Func() {
         saveData_Refresh();
     });
 
-    document.getElementById("refresh-barrage").addEventListener("click", function() {
+    toolbar.querySelector("#refresh-barrage").addEventListener("click", function() {
         if (current_barrage_status == 0) {
             // 简化
             setRefreshBarrage();
