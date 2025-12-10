@@ -1,4 +1,3 @@
-let followListHook;
 function initPkg_FollowList() {
     (function() {
         const originalXHROpen = unsafeWindow.XMLHttpRequest.prototype.open;
@@ -24,13 +23,9 @@ function initPkg_FollowList() {
         };
     })();
 
-    let intID = setInterval(() => {
-        const contentContainer = document.querySelector(".Header-follow-content");
-        if (contentContainer) {
-            followListHook = new DomHook(contentContainer, false, handleFollowList, false);
-            clearInterval(intID);
-        }
-    }, 1000);
+    gDomObserver.waitForElement('.Header-follow-content').then(contentContainer => {
+        new DomHook(contentContainer, false, handleFollowList, false);
+    });
 }
 
 function handleFollowList(m) {
