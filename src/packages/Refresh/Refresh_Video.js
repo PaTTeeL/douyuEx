@@ -1,18 +1,9 @@
-let video_num = 0;
 function initPkg_Refresh_Video() {
-    let timer = setInterval(() => {
-        const controlbar = getValidDom([".right-e7ea5d", ".right-17e251"]);
-        if (controlbar) {
-            clearInterval(timer);
-            initPkg_Refresh_Video_Dom();
-            initPkg_Refresh_Video_Func();
-            initPkg_Refresh_Video_Set();
-        }
-        video_num++;
-        if (video_num >= 100) {
-            clearInterval(timer);
-        }
-    }, 1500);
+    gDomObserver.waitForElement('#js-player-controlbar [class^=right-], [class^=controlbar] [class^=right-]').then(rightControlbar => {
+        initPkg_Refresh_Video_Dom();
+        initPkg_Refresh_Video_Func(rightControlbar);
+        initPkg_Refresh_Video_Set();
+    });
 }
 
 function initPkg_Refresh_Video_Dom() {
@@ -33,11 +24,8 @@ function Refresh_Video_insertIcon() {
     b.insertBefore(a, b.childNodes[0]);
 }
 
-function initPkg_Refresh_Video_Func() {
-    new DomHook(".right-e7ea5d", true, () => {
-        changeToolBarZIndex();
-    });
-    new DomHook(".right-17e251", true, () => {
+function initPkg_Refresh_Video_Func(rightControlbar) {
+    new DomHook(rightControlbar, true, () => {
         changeToolBarZIndex();
     });
     new DomHook(".video__VfhVg", true, (m) => {
