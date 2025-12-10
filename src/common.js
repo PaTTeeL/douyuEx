@@ -545,43 +545,55 @@ function getValidDomList(queryList) {
  */
 const gDomObserver = (function() {
     let _observer = null;
-    let listeners = [];
+    const pending = new Map();
     function _checkElements() {
-        for (let i = listeners.length - 1; i >= 0; i--) {
-            const listener = listeners[i];
-            const element = document.querySelector(listener.selector);
-            if (element) {
-                listener.resolve(element);
-                listeners.splice(i, 1);
+        for (const [selector, entry] of Array.from(pending)) {
+            const target = document.querySelector(selector);
+            if (target) {
+                entry.resolve(target);
+                pending.delete(selector);
+                //console.log("DouyuEX gDomObserver: 出现目标元素，返回结果成功", target);
             }
         }
-
-        if (listeners.length === 0 && _observer) {
+        if (pending.size === 0 && _observer) {
             _observer.disconnect();
             _observer = null;
+            console.log("DouyuEX gDomObserver: 完成所有任务，停止观察单例");
         }
     }
+
     return {
         /*
          * 异步等待一个元素出现。
-         * @param {string} selector - CSS 选择器。
+         * @param {string} CSS selector
          * @returns {Promise<Element>}
          */
         waitForElement(selector) {
+            if (pending.has(selector)) {
+                //console.log("DouyuEX gDomObserver: 目标元素相同，复用 Promise", selector);
+                return pending.get(selector).promise;
+            }
             const existingElement = document.querySelector(selector);
             if (existingElement) {
+                //console.log("DouyuEX gDomObserver: 找到现有元素，立刻返回结果", selector);
                 return Promise.resolve(existingElement);
             }
-            return new Promise((resolve) => {
-                listeners.push({ selector, resolve });
-                if (!_observer) {
-                    _observer = new MutationObserver(_checkElements);
-                    _observer.observe(document.body, {
-                        childList: true,
-                        subtree: true
-                    });
-                }
+            let resolveFn;
+            const promise = new Promise(resolve => {
+                resolveFn = resolve;
             });
+            pending.set(selector, { promise, resolve: resolveFn });
+            if (!_observer) {
+                _observer = new MutationObserver(_checkElements);
+                _observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+                //console.log("DouyuEX gDomObserver: 启动观察单例，加入等待队列", selector);
+            } else {
+                //console.log("DouyuEX gDomObserver: 复用观察单例，加入等待队列", selector);
+            }
+            return promise;
         }
     };
 })();
