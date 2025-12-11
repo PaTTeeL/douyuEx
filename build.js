@@ -14,8 +14,8 @@ function handleFolder(folderPath, excludingFileName) {
     } else {
       if (item !== excludingFileName) {
         const fileContent = fs.readFileSync(itemPath, "utf8");
-        if (item.includes(".css")) css += fileContent + "\r\n";
-        if (item.includes(".js")) js += fileContent + "\r\n";
+        if (item.includes(".css")) css += fileContent + "\r\n\r\n";
+        if (item.includes(".js")) js += fileContent + "\r\n\r\n";
       }
     }
   });
