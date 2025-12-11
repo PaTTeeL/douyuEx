@@ -133,7 +133,6 @@ function initStyles() {
 }
 
 // 编译器标记 勿删
-
 (async function () {
   initRouter(window.location.href);
 })();
