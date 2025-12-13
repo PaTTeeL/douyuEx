@@ -59,13 +59,17 @@ function initFullScreen() {
 function fullScreen() {
     let fullScreenDomHook = null;
     gDomObserver.waitForElement('#js-player-controlbar, [class^=controlbar]').then(controlbarContainer => {
-        fullScreenDomHook = new DomHook(controlbarContainer, true, (mutations) => {
+        fullScreenDomHook = new DomHook(controlbarContainer, true, async (mutations) => {
             const fullScreenButton = controlbarContainer.querySelector('.wfs-2a8e83, [class^=icon]:has([d="M20 25h6v-6M14 7H8v6"])');
             if (fullScreenButton) {
                 console.log("DouyuEx 网页全屏: 点击fullScreenButton按钮", fullScreenButton);
                 fullScreenButton.click();
-                fullScreenDomHook.closeHook();
-                fullScreenDomHook = null;
+                await gDomObserver.waitForElement('.toggle__P8TKM button').then(toggleButton => {
+                    console.log("DouyuEx 网页全屏: 点击弹幕侧边栏显示切换按钮", toggleButton);
+                    toggleButton.click();
+                    fullScreenDomHook.closeHook();
+                    fullScreenDomHook = null;
+                });
             }
         });
     });
