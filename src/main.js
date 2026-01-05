@@ -74,6 +74,7 @@ function init() {
   initPkg_Console();
   initPkg_Menu();
   initPkg_FollowList();
+  initPkg_HistoryList();
 }
 function initPkg() {
   initPkg_DanmakuTail();
