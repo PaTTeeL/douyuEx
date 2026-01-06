@@ -1,5 +1,5 @@
 function initPkg_VideoTools_Camera() {
-    camera_anchorName = getValidDom([".Title-anchorName", ".anchorName__6NXv9"]).innerText;
+    camera_anchorName = document.querySelector('[class*=anchorName]').textContent.trim();
     camera_width = liveVideoNode.videoWidth * 0.25;
     camera_height = liveVideoNode.videoHeight * 0.25;
     camera_canvas = document.createElement("canvas");
