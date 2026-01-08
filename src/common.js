@@ -584,8 +584,21 @@ function getValidDomList(queryList) {
  */
 const gDomObserver = (function() {
     let _observer = null;
-    const listeners = [];
-    const pending = new Map();
+    const _cacheMap = new Map();
+    const _pendingMap = new Map();
+    const _supportsWeakRef = typeof WeakRef === 'function';
+
+    function _getCachedElement(selectorString) {
+        if (!_cacheMap.has(selectorString)) return null;
+        const storedValue = _cacheMap.get(selectorString);
+        const element = _supportsWeakRef ? (storedValue && storedValue.deref ? storedValue.deref() : null) : storedValue;
+        if (!element || element.isConnected === false) {
+            _cacheMap.delete(selectorString);
+            return null;
+        }
+        return element;
+    }
+
     function _queryElements(selector) {
         if (typeof selector !== 'string' || !selector.trim()) return null;
         try {
@@ -594,57 +607,141 @@ const gDomObserver = (function() {
             return null;
         }
     }
-    function _checkElements() {
-        let write = 0;
-        for (let read = 0; read < listeners.length; read++) {
-            const item = listeners[read];
-            const element = _queryElements(item.selector);
-            if (element) {
-                item.resolve(element);
-                pending.delete(item.selector);
-                //console.log("DouyuEX gDomObserver: 出现目标元素，返回查询结果", element);
-            } else {
-                listeners[write++] = item;
-            }
-        }
-        listeners.length = write;
 
-        if (write === 0 && _observer) {
-            _observer.disconnect();
-            _observer = null;
-            console.log("DouyuEX gDomObserver: 完成所有任务，停止观察单例");
-        }
+    function _ensureObserver() {
+        if (_observer) return;
+        let _timer = null;
+        const _delay = 200; // 防抖延迟 (毫秒)
+        _observer = new MutationObserver(function(mutations) {
+            clearTimeout(_timer);
+            _timer = setTimeout(() => {
+                for (const [selectorString, entry] of Array.from(_pendingMap.entries())) {
+                    try {
+                        const foundElement = document._queryElements(selectorString);
+                        if (foundElement) {
+                            entry.resolve(foundElement);
+                            _pendingMap.delete(selectorString);
+                            if (entry.cacheFlag) {
+                                if (_supportsWeakRef) _cacheMap.set(selectorString, new WeakRef(foundElement));
+                                else {
+                                    _cacheMap.set(selectorString, foundElement);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        _pendingMap.delete(selectorString);
+                    }
+                }
+                if (!_supportsWeakRef) {
+                    for (const [selectorString, storedElement] of Array.from(_cacheMap.entries())) {
+                        if (!storedElement || storedElement.isConnected === false) {
+                            _cacheMap.delete(selectorString);
+                        }
+                    }
+                }
+                if (_pendingMap.size === 0 && (!_supportsWeakRef && _cacheMap.size === 0)) {
+                    try { _observer.disconnect(); } catch (e) {}
+                    _observer = null;
+                }
+            }, _delay);
+        });
+        _observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
     }
+
+    function _stopObserver() {
+        if (!_observer) return;
+        try { _observer.disconnect(); } catch (e) {}
+        _observer = null;
+    }
+
     return {
         /*
-         * 异步等待一个元素出现。
+         * 异步等待一个元素出现
          * @param {string} CSS selector
+         * @options: { cache: boolean } - 找到后是否把元素写入缓存（默认为 true）
          * @returns {Promise<Element>}
          */
-        waitForElement(selector) {
-            const existing = pending.get(selector);
-            if (existing) {
-                //console.log("DouyuEX gDomObserver: 相同目标元素，复用 Promise", selector);
-                return existing.promise;
+        waitForElement(selectorString, { cache = true } = {}) {
+            if (typeof selectorString !== 'string') return Promise.resolve(null);
+            selectorString = selectorString.trim();
+            if (!selectorString) return Promise.resolve(null);
+
+            if (_pendingMap.has(selectorString)) {
+                //console.log("DouyuEX gDomObserver: 目标元素相同，复用 Promise", selectorString);
+                const existingEntry = _pendingMap.get(selectorString);
+                if (cache) existingEntry.cacheFlag = true;
+                return existingEntry.promise;
             }
-            const element = _queryElements(selector);
-            if (element) {
-                //console.log("DouyuEX gDomObserver: 已有目标元素，立刻返回结果", element);
-                return Promise.resolve(element);
+
+            const cachedElement = _getCachedElement(selectorString);
+            if (cachedElement) {
+                //console.log("DouyuEX gDomObserver: 找到缓存元素，立刻返回结果", selectorString);
+                return Promise.resolve(cachedElement);
             }
+
+            const existingElement = _queryElements(selectorString);
+            if (existingElement) {
+                //console.log("DouyuEX gDomObserver: 找到现有元素，立刻返回结果", selectorString);
+                if (cache) {
+                    if (_supportsWeakRef) _cacheMap.set(selectorString, new WeakRef(existingElement));
+                    else _cacheMap.set(selectorString, existingElement);
+                    }
+                return Promise.resolve(existingElement);
+            }
+
             let resolveFn;
-            const promise = new Promise(resolve => resolveFn = resolve);
-            const listener = { selector, resolve: resolveFn, promise };
-            pending.set(selector, listener);
-            listeners.push(listener);
-            if (!_observer) {
-                _observer = new MutationObserver(_checkElements);
-                _observer.observe(document.body, { childList: true, subtree: true });
-                //console.log("DouyuEX gDomObserver: 启动观察单例，加入等待队列", selector);
-            } else {
-                //console.log("DouyuEX gDomObserver: 复用观察单例，加入等待队列", selector);
-            }
+            const promise = new Promise(resolve => {
+                resolveFn = resolve;
+            });
+            _pendingMap.set(selectorString, { promise, resolve: resolveFn, cacheFlag: !!cache });
+            _ensureObserver();
             return promise;
+        },
+
+        /**
+         * 同步查询并缓存（支持逗号选择器）
+         * options: { refresh: boolean } - 刷新缓存
+         * 返回 Element 或 null
+         */
+        queryWithCache(selectorString, { refresh = false } = {}) {
+            if (typeof selectorString !== 'string') return null;
+            selectorString = selectorString.trim();
+            if (!selectorString) return null;
+
+            if (!refresh) {
+                const cachedElement = _getCachedElement(selectorString);
+                if (cachedElement) return cachedElement;
+            } else {
+                _cacheMap.delete(selectorString);
+            }
+
+            const foundElement = _queryElements(selectorString);
+            if (foundElement) {
+                if (_supportsWeakRef) {
+                    _cacheMap.set(selectorString, new WeakRef(foundElement));
+                } else {
+                    _cacheMap.set(selectorString, foundElement);
+                    _ensureObserver();
+                }
+                return foundElement;
+            }
+            return null;
+        },
+
+        /**
+         * refresh(selector) 作为 query(..., { force:true }) 的语义糖
+         */
+        refresh(selectorString) {
+            return this.queryWithCache(selectorString, { refresh: true });
+        },
+
+        /**
+         * 清理全部缓存与 pending，并停止 observer（用于卸载或热重载）
+         */
+        clearAll() {
+            _pendingMap.clear();
+            _cacheMap.clear();
+            _stopObserver();
         }
-    };
+	};
 })();
