@@ -48,7 +48,10 @@ function renderBarragePanelTip() {
 
     const offsetX = (initialMenuLeft < boundaryLeft && boundaryLeft - initialMenuLeft) ||
                     (initialMenuRight > boundaryRight && boundaryRight - initialMenuRight);
-    if(offsetX) dom.style.transform = `translateX(calc(-50% + ${offsetX}px))`;
+    if(offsetX) {
+        btnsContainer.style.transform = `translateX(calc(-50% + ${offsetX}px))`;
+        btnsContainer.querySelector('.btnscontainerrect-6e7730').style.transform = `translateX(calc(-50% - ${offsetX}px))`;
+    }
 }
 
 function setBarragePanelTipFunc() {
