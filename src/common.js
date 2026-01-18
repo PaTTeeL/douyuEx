@@ -513,28 +513,67 @@ function getCsrfToken() {
   });
 }
 
-function getValidDom(queryList) {
-	for (const query of queryList) {
-		let dom = null;
-		if (typeof query === "string") {
-			dom = document.querySelector(query);
-		} else {
-			dom = query;
+const SIMPLE_NAME_REGEX = /^[\w-]+$/;
+function _rawQuery(selector, isSingle) {
+    if (typeof selector !== 'string' || selector.length === 0) return isSingle ? null : [];
+	let firstCode = selector.charCodeAt(0);
+	if (firstCode <= 32) {
+		selector = selector.trimStart();
+		if (selector.length === 0) return isSingle ? null : [];
+		firstCode = selector.charCodeAt(0);
+	}
+	if ((firstCode === 35 || firstCode === 46) && selector.length > 1) {
+		const name = selector.slice(1);
+		if (SIMPLE_NAME_REGEX.test(name)) {
+			if (firstCode === 35) {
+				const element = document.getElementById(name);
+				return isSingle ? element : (element ? [element] : []);
+			} else {
+				return isSingle ? document.getElementsByClassName(name)[0] || null
+								: document.getElementsByClassName(name);
+			}
 		}
-		if (dom) return dom;
+	}
+	try {
+		return isSingle ? document.querySelector(selector)
+						: document.querySelectorAll(selector);
+	} catch (e) {
+		return isSingle ? null : [];
+	}
+}
+
+function getValidDom(queryList) {
+	if (queryList == null) return null;
+	const length = queryList.length >>> 0;
+	for (let i = 0; i < length; i++) {
+		const query = queryList[i];
+		if (!query) continue;
+		if (typeof query === "string") {
+			const dom = _rawQuery(query, true);
+			if (dom) return dom;
+		} else if (query.nodeType) {
+			return query;
+		} else if (typeof query.length === "number" && query[0] && query[0].nodeType) {
+			return query[0];
+		}
 	}
 	return null;
 }
 
 function getValidDomList(queryList) {
-	for (const query of queryList) {
-		let dom = [];
+	if (queryList == null) return [];
+	const length = queryList.length >>> 0;
+	for (let i = 0; i < length; i++) {
+		const query = queryList[i];
+		if (!query) continue;
 		if (typeof query === "string") {
-			dom = document.querySelectorAll(query);
-		} else {
-			dom = query;
+			const list = _rawQuery(query, false);
+			if (list.length > 0) return list;
+		} else if (query.nodeType) {
+			return [query];
+		} else if (typeof query.length === "number" && query[0] && query[0].nodeType) {
+			return query;
 		}
-		if (dom.length > 0) return dom;
 	}
 	return [];
 }
