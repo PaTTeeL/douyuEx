@@ -513,30 +513,75 @@ function getCsrfToken() {
   });
 }
 
+function _rawQuery(selector, isList) {
+    if (typeof selector !== 'string') return isList ? [] : null;
+    let length = selector.length;
+    if (length === 0) return isList ? [] : null;
+    let firstCode = selector.charCodeAt(0);
+    if (firstCode <= 32 || selector.charCodeAt(length - 1) <= 32) {
+        selector = selector.trim();
+        length = selector.length;
+        if (length === 0) return isList ? [] : null;
+        firstCode = selector.charCodeAt(0);
+    }
+    if (length > 1 && firstCode === 35) {
+        const value = selector.slice(1);
+        if (!/[\s>+~,.#:()[\]\\]/.test(value)) {
+            const element = document.getElementById(value);
+            return isList ? (element ? [element] : []) : element;
+        }
+    } else if (length > 1 && firstCode === 46) {
+        const value = selector.slice(1);
+        if (!/[\s>+~,.#:()[\]\\]/.test(value)) {
+            const list = document.getElementsByClassName(value);
+            return isList ? list : (list[0] || null);
+        }
+    } else if (/^[a-zA-Z][\w-]*$/.test(selector)) {
+        const list = document.getElementsByTagName(selector);
+        return isList ? list : (list[0] || null);
+    }
+    try {
+        return isList ? document.querySelectorAll(selector)
+                      : document.querySelector(selector);
+    } catch (err) {
+        return isList ? [] : null;
+    }
+}
+
 function getValidDom(queryList) {
-	for (const query of queryList) {
-		let dom = null;
-		if (typeof query === "string") {
-			dom = document.querySelector(query);
-		} else {
-			dom = query;
-		}
-		if (dom) return dom;
-	}
-	return null;
+    if (queryList == null) return null;
+    const length = queryList.length >>> 0;
+    for (let i = 0; i < length; i++) {
+        const query = queryList[i];
+        if (!query) continue;
+        if (typeof query === "string") {
+            const dom = _rawQuery(query);
+            if (dom) return dom;
+        } else if (query.nodeType) {
+            return query;
+        } else if (typeof query.length === "number" && query[0] && query[0].nodeType) {
+            return query[0];
+        }
+    }
+    return null;
 }
 
 function getValidDomList(queryList) {
-	for (const query of queryList) {
-		let dom = [];
-		if (typeof query === "string") {
-			dom = document.querySelectorAll(query);
-		} else {
-			dom = query;
-		}
-		if (dom.length > 0) return dom;
-	}
-	return [];
+    if (queryList == null) return [];
+    const length = queryList.length >>> 0;
+    for (let i = 0; i < length; i++) {
+        const query = queryList[i];
+        if (!query) continue;
+        if (typeof query === "string") {
+            const list = _rawQuery(query, true);
+            if (list.length > 0) return list;
+        } else if (query.nodeType) {
+            return [query];
+        } else if (typeof query.length === "number" && query[0] && query[0].nodeType) {
+            return query;
+        }
+    }
+    return [];
 }
 
 /*
@@ -564,14 +609,6 @@ const gDomObserver = (() => {
         }
         return null;
     }
-    function _queryElements(selector) {
-        if (typeof selector !== 'string' || !selector.trim()) return null;
-        try {
-            return document.querySelector(selector);
-        } catch (err) {
-            return null;
-        }
-    }
     function _checkElements() {
         if (_checkElements.timeoutId) cancelAnimationFrame(_checkElements.timeoutId);
         _checkElements.timeoutId = requestAnimationFrame(() => {
@@ -584,7 +621,7 @@ const gDomObserver = (() => {
                     pendingMap.delete(selector);
                     continue;
                 }
-                const element = _queryElements(selector);
+                const element = _rawQuery(selector);
                 if (element) {
                     item.resolve(element);
                     console.log("DouyuEX gDomObserver: 目标元素出现，返回查询结果", element);
@@ -625,7 +662,7 @@ const gDomObserver = (() => {
         waitForElement(selector, timeout = null) {
             selector = typeof selector === "string" ? selector.trim() : "";
             if (!selector) return Promise.resolve(null);
-            const element = _queryElements(selector);
+            const element = _rawQuery(selector);
             const existing = pendingMap.get(selector);
             if (element) {
                 if (existing) {
