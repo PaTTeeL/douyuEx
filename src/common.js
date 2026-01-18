@@ -593,19 +593,11 @@ const gDomObserver = (function() {
     const listeners = [];
     const pendingMap = new Map();
     const root = document.body || document.documentElement || document;
-    function _queryElements(selector) {
-        if (typeof selector !== 'string' || !selector.trim()) return null;
-        try {
-            return document.querySelector(selector);
-        } catch (err) {
-            return null;
-        }
-    }
     function _checkElements() {
         let write = 0, length = listeners.length;
         for (let read = 0; read < length; read++) {
             const item = listeners[read];
-            const element = _queryElements(item.selector);
+            const element = _rawQuery(item.selector, true);
             if (element) {
                 item.resolve(element);
                 pendingMap.delete(item.selector);
@@ -633,12 +625,14 @@ const gDomObserver = (function() {
          *   });
          */
         waitForElement(selector) {
+            selector = typeof selector === 'string' ? selector.trim() : '';
+            if (!selector) return Promise.resolve(null);
             const existing = pendingMap.get(selector);
             if (existing) {
                 console.log("DouyuEX gDomObserver: 目标元素重复，合并等待任务", selector);
                 return existing.promise;
             }
-            const element = _queryElements(selector);
+            const element = _rawQuery(selector, true);
             if (element) {
                 //console.log("DouyuEX gDomObserver: 目标元素存在，立刻返回结果", existingElement);
                 return Promise.resolve(element);
