@@ -1,11 +1,10 @@
 function initPkg_Refresh_Video() {
     Promise.all([
         gDomObserver.waitForElement('.menu-da2a9e'),
-        gDomObserver.waitForElement('.PlayerToolbar'),
-    ]).then(([playerMenu, playerToolbar]) => {
+    ]).then(([playerMenu]) => {
         initPkg_Refresh_Video_Dom(playerMenu);
-        const setSimpleMode = initPkg_Refresh_Video_Func(playerMenu, playerToolbar);
-        initPkg_Refresh_Video_Set(setSimpleMode);
+        initPkg_Refresh_Video_Func(playerMenu);
+        initPkg_Refresh_Video_Set();
     });
 }
 
@@ -28,7 +27,7 @@ function initPkg_Refresh_Video_Dom(playerMenu) {
     } */
 }
 
-function initPkg_Refresh_Video_Func(playerMenu, playerToolbar) {
+function initPkg_Refresh_Video_Func(playerMenu) {
 /*  旧版UI
     gDomObserver.waitForElement('.right-17e251, .right-e7ea5d').then(rightControlBar => {
         new DomHook(rightControlBar, true, () => {
@@ -57,70 +56,31 @@ function initPkg_Refresh_Video_Func(playerMenu, playerToolbar) {
 
     playerMenu.addEventListener("click", e => {
         if (!e.target.closest("#refresh-video")) return;
-        setSimpleMode(!refresh_Video_getStatus());
+        toggleSimpleMode();
     });
 /*  旧版UI
     playerToolbar.addEventListener("click", e => {
         if (!e.target.closest("#refresh-video2")) return;
-        setSimpleMode(!refresh_Video_getStatus());
+        toggleSimpleMode();
     }); */
 
-    function setSimpleMode(isSimple) {
-        let dom_toolbar = playerToolbar.querySelector('.PlayerToolbar-ContentRow');
-        let dom_video = playerMenu.closest('.stream__T55I3') || playerMenu.closest('.layout-Player-video');
-        let dom_refresh = playerMenu.querySelector('#refresh-video');
-/*  旧版UI
-        let dom_refresh2 = playerToolbar.querySelector('#refresh-video2'); */
-        if (!isSimple) {
-            dom_toolbar.style.visibility = "visible";
-            dom_video.style.bottom = "";
-            dom_video.style.zIndex = "";
-/*  旧版UI
-            dom_refresh2.style.display = "none"; */
-            dom_refresh.innerText = "简洁模式";
-            refresh_Video_removeStyle();
-        } else {
-            dom_toolbar.style.visibility = "hidden";
-            dom_video.style.bottom = "0";
-            dom_video.style.zIndex = "75";
-/*  旧版UI
-            dom_refresh2.style.display = "block"; */
-            dom_refresh.innerText = "✓ 简洁模式";
-            refresh_Video_setStyle();
-        }
-/*  旧版UI
-        changeToolBarZIndex(); */
+    function toggleSimpleMode() {
+        document.body.classList.toggle("is-simpleMode");
         saveData_Refresh();
         resizeWindow();
     }
-    return setSimpleMode;
 }
 
 function refresh_Video_getStatus() {
-    let dom_toolbar = document.getElementsByClassName("PlayerToolbar-ContentRow")[0];
-    return dom_toolbar ? dom_toolbar.style.visibility === "hidden" : false;
+    return document.body.classList.contains("is-simpleMode");
 }
 // FullPageFollowGuide
-function initPkg_Refresh_Video_Set(setSimpleMode) {
-    if (typeof setSimpleMode !== "function") return;
+function initPkg_Refresh_Video_Set() {
     let ret = localStorage.getItem("ExSave_Refresh");
     if (ret != null) {
         let retJson = JSON.parse(ret);
-        if ("video" in retJson == false) {
-            retJson.video = {status: false};
-        }
-        if (retJson.video.status == true) {
-            setSimpleMode(true);
+        if (retJson.video && retJson.video.status === true) {
+            document.body.classList.add("is-simpleMode");
         }
     }
-}
-
-function refresh_Video_setStyle() {
-    StyleHook_set("Ex_Style_VideoRefresh", `
-    .PELact,.pushTower-wrapper-gf1HG,.PkView-9f6a2c,.MorePk,.RandomPKBar,.LiveRoomLoopVideo,.LiveRoomDianzan,.maiMaitView-68e80c,.PkView{display:none !important;}
-    `)
-}
-
-function refresh_Video_removeStyle() {
-    StyleHook_remove("Ex_Style_VideoRefresh");
 }
