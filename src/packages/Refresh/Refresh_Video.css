@@ -7,7 +7,7 @@
     background-size: contain;
 } */
 
-#refresh-video2 {
+/* #refresh-video2 {
     display: none;
     position: absolute;
     top: 20px;
@@ -17,4 +17,35 @@
 
 #refresh-video2-svg {
     fill: rgba(0,0,0,.6)
+} */
+
+/* Simple Mode Styles */
+.is-simpleMode .stream__T55I3,
+.is-simpleMode .layout-Player-video {
+    bottom: 0 !important;
+    z-index: 75 !important;
+}
+
+.is-simpleMode #refresh-video::before {
+    content: "✓ ";
+}
+
+/* .is-simpleMode #refresh-video2 {
+    display: block !important;
+} */
+
+.is-simpleMode .PlayerToolbar-ContentRow {
+    visibility: hidden !important;
+}
+
+.is-simpleMode .PELact,
+.is-simpleMode .pushTower-wrapper-gf1HG,
+.is-simpleMode .PkView-9f6a2c,
+.is-simpleMode .MorePk,
+.is-simpleMode .RandomPKBar,
+.is-simpleMode .LiveRoomLoopVideo,
+.is-simpleMode .LiveRoomDianzan,
+.is-simpleMode .maiMaitView-68e80c,
+.is-simpleMode .PkView {
+    display: none !important;
 }
