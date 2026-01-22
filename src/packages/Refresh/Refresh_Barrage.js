@@ -12,70 +12,58 @@ function initPkg_Refresh_Barrage() {
 }
 
 function initPkg_Refresh_Barrage_Dom(toolbar) {
-	let a = document.createElement("a");
-    a.className = "refresh-barrage";
-    a.id = "refresh-barrage";
-	a.innerHTML = '<svg t="1588051109604" id="refresh-barrage__svg" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3095" width="16" height="16"><path d="M588.416 516.096L787.2 317.312a54.016 54.016 0 1 0-76.416-76.416L512 439.68 313.216 241.024A54.016 54.016 0 1 0 236.8 317.376l198.784 198.848-198.016 197.888a54.016 54.016 0 1 0 76.416 76.416L512 592.576l197.888 197.952a54.016 54.016 0 1 0 76.416-76.416L588.416 516.096z" fill="#AFAFAF" p-id="3096"></path></svg><i class="Barrage-toolbarIcon"></i><span id="refresh-barrage__text" class="Barrage-toolbarText">前缀</span>';
-
-	let b = document.createElement("a");
-    b.className = "Barrage-toolbarLock";
-    b.id = "refresh-barrage-frame";
-	b.innerHTML = '<i class="Barrage-toolbarIcon"></i><span id="refresh-barrage-frame__text" class="Barrage-toolbarText">拉高</span>';
-
-	toolbar.prepend(a, b);
+    if (!toolbar.querySelector(".refresh-barrage")) {
+        toolbar.insertAdjacentHTML(
+            "afterbegin",
+            `<a class="refresh-barrage" id="refresh-barrage">
+                <svg t="1588051109604" id="refresh-barrage__svg" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3095" width="16" height="16"><path d="M588.416 516.096L787.2 317.312a54.016 54.016 0 1 0-76.416-76.416L512 439.68 313.216 241.024A54.016 54.016 0 1 0 236.8 317.376l198.784 198.848-198.016 197.888a54.016 54.016 0 1 0 76.416 76.416L512 592.576l197.888 197.952a54.016 54.016 0 1 0 76.416-76.416L588.416 516.096z" fill="#AFAFAF" p-id="3096"></path></svg><i class="Barrage-toolbarIcon"></i><span id="refresh-barrage__text" class="Barrage-toolbarText">前缀</span>
+            </a>
+            <a class="Barrage-toolbarLock" id="refresh-barrage-frame">
+                <i class="Barrage-toolbarIcon"></i><span id="refresh-barrage-frame__text" class="Barrage-toolbarText">拉高</span>
+            </a>`
+        );
+    }
 }
 
 function initPkg_Refresh_Barrage_Func(toolbar, dom_rank) {
-	toolbar.querySelector("#refresh-barrage-frame").addEventListener("click", function() {
-        let dom_activity = document.getElementById("js-room-activity");
-        let dom_topBarrage = document.getElementsByClassName("Barrage")[0];
-        if (dom_rank.style.display == "none") {
-            // 被拉高
-            dom_rank.style.display = "block";
-            dom_activity.style.display = "block";
-            dom_topBarrage.className = "Barrage";
-            document.getElementById("refresh-barrage-frame__text").innerText = "拉高";
+    toolbar.addEventListener("click", e => {
+        if (e.target.closest("#refresh-barrage-frame")) {
+            let dom_activity = document.getElementById("js-room-activity");
+            let dom_topBarrage = toolbar.closest('.Barrage');
+            if (dom_rank.style.display == "none") {
+                // 被拉高
+                dom_rank.style.display = "block";
+                dom_activity.style.display = "block";
+                dom_topBarrage.className = "Barrage";
+                document.getElementById("refresh-barrage-frame__text").innerText = "拉高";
 
-        } else {
-            // 没拉高
-            dom_rank.style.display = "none";
-            dom_activity.style.display = "none";
-            dom_topBarrage.className = "Barrage top-0-important";
-            document.getElementById("refresh-barrage-frame__text").innerText = "恢复";
+            } else {
+                // 没拉高
+                dom_rank.style.display = "none";
+                dom_activity.style.display = "none";
+                dom_topBarrage.className = "Barrage top-0-important";
+                document.getElementById("refresh-barrage-frame__text").innerText = "恢复";
+            }
+            saveData_Refresh();
+        } else if (e.target.closest("#refresh-barrage")) {
+            if (current_barrage_status == 0) {
+                // 简化
+                setRefreshBarrage();
+            } else {
+                cancelRefreshBarrage();
+            }
+            saveData_Refresh();
         }
-        saveData_Refresh();
-    });
-
-    toolbar.querySelector("#refresh-barrage").addEventListener("click", function() {
-        if (current_barrage_status == 0) {
-            // 简化
-            setRefreshBarrage();
-        } else {
-            cancelRefreshBarrage();
-        }
-        saveData_Refresh();
     });
 }
 
 function refresh_BarrageFrame_getStatus() {
     let dom_rank = document.getElementsByClassName("layout-Player-rank")[0];
-    if (dom_rank.style.display == "none") {
-        // 被拉高
-        return true;
-    } else {
-        // 没拉高
-        return false;
-    }
+    return dom_rank ? dom_rank.style.display == "none" : false;
 }
 
 function refresh_Barrage_getStatus() {
-    if (current_barrage_status == 1) {
-        // 被简化
-        return true;
-    } else {
-        // 没被简化
-        return false;
-    }
+    return current_barrage_status == 1 ? true : false;
 }
 
 function initPkg_Refresh_Barrage_Set() {
