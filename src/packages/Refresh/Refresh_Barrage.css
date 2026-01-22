@@ -1,4 +1,5 @@
-.refresh-barrage {
+/* 弹幕简洁模式 */
+#btn-simpleBarrage {
     display: inline-block;
     vertical-align: top;
     margin: 0 2px;
@@ -14,15 +15,63 @@
     user-select: none;
 }
 
-.live-next-body .refresh-barrage {
+.live-next-body #btn-simpleBarrage {
     background-color: var(--front-background-color);
     border: 1px solid var(--front-border-color);
 }
 
-#refresh-barrage__svg {
+#btn-simpleBarrage__svg {
     vertical-align: middle;
 }
 
-.top-0-important {
+#btn-simpleBarrage__text {
+    vertical-align: top;
+}
+
+#btn-simpleBarrage__text::after {
+    content: "前缀";
+}
+
+.is-barrageSimple #btn-simpleBarrage {
+    background-color: rgb(18,150,219) !important;
+    color: #fff !important;
+}
+
+/* 其他需要隐藏的元素 */
+.is-barrageSimple .UserCsgoGameDataMedal,
+.is-barrageSimple .Barrage-honor,
+.is-barrageSimple .Barrage-listItem .Barrage-icon,
+.is-barrageSimple .Barrage-listItem .FansMedal.is-made,
+.is-barrageSimple .Barrage-listItem .RoomLevel,
+.is-barrageSimple .Barrage-listItem .Motor,
+.is-barrageSimple .Barrage-listItem .ChatAchievement,
+.is-barrageSimple .Barrage-listItem .Barrage-hiIcon,
+.is-barrageSimple .Barrage-listItem .Medal,
+.is-barrageSimple .Barrage-listItem .MatchSystemTeamMedal,
+/* .is-barrageSimple .Barrage-listItem .UserLevel */
+.is-barrageSimple .Barrage-listItem .Baby,
+.is-barrageSimple .FansMedalWrap {
+    display: none !important;
+}
+
+/* 隐藏用户排名（拉高弹幕栏） */
+#btn-rankHidden__text::after {
+    content: "拉高";
+}
+
+.is-rankHidden .layout-Player-rank,
+.is-rankHidden #js-room-activity {
+    display: none !important;
+}
+
+.is-rankHidden .Barrage {
     top: 0 !important;
+}
+
+.is-rankHidden #btn-rankHidden {
+    background-color: rgb(18,150,219) !important;
+}
+
+.is-rankHidden #btn-rankHidden__text::after {
+    content: "恢复";
 }
