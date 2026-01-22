@@ -1,15 +1,15 @@
-function initPkg_Refresh_Video() {
+function initPkg_Refresh_Player() {
     Promise.all([
         gDomObserver.waitForElement('.menu-da2a9e'),
         gDomObserver.waitForElement('.shieldSettingPanel-074097'),
     ]).then(([playerMenu, settingPanel]) => {
-        initPkg_Refresh_Video_Dom(playerMenu, settingPanel);
-        initPkg_Refresh_Video_Func(playerMenu, settingPanel);
-        initPkg_Refresh_Video_Set();
+        initPkg_Refresh_Player_Dom(playerMenu, settingPanel);
+        initPkg_Refresh_Player_Func(playerMenu, settingPanel);
+        initPkg_Refresh_Player_Set();
     });
 }
 
-function initPkg_Refresh_Video_Dom(playerMenu, settingPanel) {
+function initPkg_Refresh_Player_Dom(playerMenu, settingPanel) {
     if (!playerMenu.querySelector("#menu-playerSimple")) {
         playerMenu.insertAdjacentHTML(
             "beforeend",
@@ -44,7 +44,7 @@ function initPkg_Refresh_Video_Dom(playerMenu, settingPanel) {
     } */
 }
 
-function initPkg_Refresh_Video_Func(playerMenu, settingPanel) {
+function initPkg_Refresh_Player_Func(playerMenu, settingPanel) {
 /*  旧版UI
     gDomObserver.waitForElement('.right-17e251, .right-e7ea5d').then(rightControlBar => {
         new DomHook(rightControlBar, true, () => {
@@ -99,17 +99,10 @@ function initPkg_Refresh_Video_Func(playerMenu, settingPanel) {
     }
 }
 
-function refresh_Video_getStatus() {
-    return document.body.classList.contains("is-playerSimple");
-}
 // FullPageFollowGuide
-function initPkg_Refresh_Video_Set() {
-    let ret = localStorage.getItem("ExSave_Refresh");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.video && retJson.video.status === true) {
-            document.body.classList.add("is-playerSimple");
-            gDomObserver.waitForElement('#item-playerSimple__svg').then(svg => svg.className = "checked-13adb7");
-        }
+function initPkg_Refresh_Player_Set() {
+    if (loadData_Refresh("playerSimple")) {
+        document.body.classList.add("is-playerSimple");
+        gDomObserver.waitForElement('#item-playerSimple__svg').then(svg => svg.className = "checked-13adb7");
     }
 }
