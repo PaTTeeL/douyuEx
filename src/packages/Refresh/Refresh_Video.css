@@ -1,4 +1,4 @@
-/* #refresh-video {
+/* #menu-playerSimple {
     float: left;
     width: 24px;
     height: 24px;
@@ -7,7 +7,7 @@
     background-size: contain;
 } */
 
-/* #refresh-video2 {
+/* #btn-playerSimple {
     display: none;
     position: absolute;
     top: 20px;
@@ -15,37 +15,37 @@
     cursor: pointer;
 }
 
-#refresh-video2-svg {
+#btn-playerSimple__svg {
     fill: rgba(0,0,0,.6)
 } */
 
-/* Simple Mode Styles */
-.is-simpleMode .stream__T55I3,
-.is-simpleMode .layout-Player-video {
+/* Player Simple Mode Styles */
+.is-playerSimple .stream__T55I3,
+.is-playerSimple .layout-Player-video {
     bottom: 0 !important;
     z-index: 75 !important;
 }
 
-.is-simpleMode #refresh-video::before {
+.is-playerSimple #menu-playerSimple::before {
     content: "✓ ";
 }
 
-/* .is-simpleMode #refresh-video2 {
+/* .is-playerSimple #btn-playerSimple {
     display: block !important;
 } */
 
-.is-simpleMode .PlayerToolbar-ContentRow {
+.is-playerSimple .PlayerToolbar-ContentRow {
     visibility: hidden !important;
 }
 
-.is-simpleMode .PELact,
-.is-simpleMode .pushTower-wrapper-gf1HG,
-.is-simpleMode .PkView-9f6a2c,
-.is-simpleMode .MorePk,
-.is-simpleMode .RandomPKBar,
-.is-simpleMode .LiveRoomLoopVideo,
-.is-simpleMode .LiveRoomDianzan,
-.is-simpleMode .maiMaitView-68e80c,
-.is-simpleMode .PkView {
+.is-playerSimple .PELact,
+.is-playerSimple .pushTower-wrapper-gf1HG,
+.is-playerSimple .PkView-9f6a2c,
+.is-playerSimple .MorePk,
+.is-playerSimple .RandomPKBar,
+.is-playerSimple .LiveRoomLoopVideo,
+.is-playerSimple .LiveRoomDianzan,
+.is-playerSimple .maiMaitView-68e80c,
+.is-playerSimple .PkView {
     display: none !important;
 }
