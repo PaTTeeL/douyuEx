@@ -35,23 +35,11 @@ function initPkg_Refresh_Barrage_Func(toolbar) {
     });
 }
 
-function refresh_BarrageFrame_getStatus() {
-    return document.body.classList.contains("is-rankHidden");
-}
-
-function refresh_Barrage_getStatus() {
-    return document.body.classList.contains("is-barrageSimple");
-}
-
 function initPkg_Refresh_Barrage_Set() {
-    let ret = localStorage.getItem("ExSave_Refresh");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.barrageFrame && retJson.barrageFrame.status === true) {
-            document.body.classList.add("is-rankHidden");
-        }
-        if (retJson.barrage && retJson.barrage.status === true) {
-            document.body.classList.add("is-barrageSimple");
-        }
+    if (loadData_Refresh("barrageSimple")) {
+        document.body.classList.add("is-barrageSimple");
+    }
+    if (loadData_Refresh("rankHidden")) {
+        document.body.classList.add("is-rankHidden");
     }
 }
