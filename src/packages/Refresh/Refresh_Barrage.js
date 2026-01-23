@@ -33,6 +33,16 @@ function initPkg_Refresh_Barrage_Func(toolbar) {
             saveData_Refresh();
         }
     });
+    gHotkey.add({
+        "h": () => {
+            document.body.classList.toggle("is-rankHidden");
+            saveData_Refresh();
+        },
+        "x": () => {
+            document.body.classList.toggle("is-barrageSimple");
+            saveData_Refresh();
+        }
+    });
 }
 
 function initPkg_Refresh_Barrage_Set() {
