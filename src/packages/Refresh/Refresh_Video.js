@@ -85,6 +85,7 @@ function initPkg_Refresh_Player_Func(playerMenu, settingPanel) {
         if (!e.target.closest("#btn-playerSimple")) return;
         toggleSimpleMode();
     }); */
+    gHotkey.add("s", () => toggleSimpleMode());
 
     function toggleSimpleMode() {
         document.body.classList.toggle("is-playerSimple");
