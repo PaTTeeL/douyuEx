@@ -7,6 +7,10 @@
     background-size: contain;
 } */
 
+#item-playerSimple__path {
+    display: none;
+}
+
 /* #btn-playerSimple {
     display: none;
     position: absolute;
@@ -28,6 +32,14 @@
 
 .is-playerSimple #menu-playerSimple::before {
     content: "✓ ";
+}
+
+.is-playerSimple #item-playerSimple__rect {
+    opacity: 1;
+}
+
+.is-playerSimple #item-playerSimple__path {
+    display: block;
 }
 
 /* .is-playerSimple #btn-playerSimple {
