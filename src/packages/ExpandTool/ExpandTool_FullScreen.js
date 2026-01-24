@@ -67,6 +67,11 @@ function fullScreen() {
                 await gDomObserver.waitForElement('.toggle__P8TKM button').then(toggleButton => {
                     console.log("DouyuEx 网页全屏: 点击弹幕侧边栏显示切换按钮", toggleButton);
                     toggleButton.click();
+                    gHotkey.add("t", () => {
+                        const stageContainer = controlbarContainer.closest('.stage__D8VhO');
+                        stageContainer.classList.toggle("small__KRjD1");
+                        stageContainer.classList.toggle("large__pcRJn");
+                    });
                     fullScreenDomHook.closeHook();
                     fullScreenDomHook = null;
                 });
