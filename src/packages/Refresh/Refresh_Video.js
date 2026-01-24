@@ -1,14 +1,15 @@
 function initPkg_Refresh_Video() {
     Promise.all([
         gDomObserver.waitForElement('.menu-da2a9e'),
-    ]).then(([playerMenu]) => {
-        initPkg_Refresh_Video_Dom(playerMenu);
-        initPkg_Refresh_Video_Func(playerMenu);
+        gDomObserver.waitForElement('.shieldSettingPanel-074097'),
+    ]).then(([playerMenu, settingPanel]) => {
+        initPkg_Refresh_Video_Dom(playerMenu, settingPanel);
+        initPkg_Refresh_Video_Func(playerMenu, settingPanel);
         initPkg_Refresh_Video_Set();
     });
 }
 
-function initPkg_Refresh_Video_Dom(playerMenu) {
+function initPkg_Refresh_Video_Dom(playerMenu, settingPanel) {
     if (!playerMenu.querySelector("#menu-playerSimple")) {
         playerMenu.insertAdjacentHTML(
             "beforeend",
@@ -16,6 +17,20 @@ function initPkg_Refresh_Video_Dom(playerMenu) {
         );
     }
 
+    if (!settingPanel.querySelector("#item-playerSimple")) {
+        settingPanel.insertAdjacentHTML(
+            "afterbegin",
+            `<div class="shieldSettingItem-4b3b84" id="item-playerSimple">
+                <i class="checkButton-98c84e">
+                    <svg fill="none" viewBox="0 0 16 16" class="unchecked-b96102" id="item-playerSimple__svg">
+                        <rect opacity="0.6" x="0.5" y="0.5" width="15" height="15" rx="3.5" stroke="currentColor" id="item-playerSimple__rect"></rect>
+                        <path d="M4 8.308L6.8 11 12 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" id="item-playerSimple__path"></path>
+                    </svg>
+                </i>
+                <label class="shieldSettingLabel-be2859">视频简洁模式</label>
+            </div>`
+        );
+    }
 /*  旧版UI
     if (!playerToolbar.querySelector("#btn-playerSimple")) {
         playerToolbar.insertAdjacentHTML(
@@ -29,7 +44,7 @@ function initPkg_Refresh_Video_Dom(playerMenu) {
     } */
 }
 
-function initPkg_Refresh_Video_Func(playerMenu) {
+function initPkg_Refresh_Video_Func(playerMenu, settingPanel) {
 /*  旧版UI
     gDomObserver.waitForElement('.right-17e251, .right-e7ea5d').then(rightControlBar => {
         new DomHook(rightControlBar, true, () => {
@@ -61,6 +76,10 @@ function initPkg_Refresh_Video_Func(playerMenu) {
         if (!e.target.closest("#menu-playerSimple")) return;
         toggleSimpleMode();
     });
+    settingPanel.addEventListener("click", e => {
+        if (!e.target.closest("#item-playerSimple")) return;
+        toggleSimpleMode();
+    });
 /*  旧版UI
     playerToolbar.addEventListener("click", e => {
         if (!e.target.closest("#btn-playerSimple")) return;
@@ -69,6 +88,12 @@ function initPkg_Refresh_Video_Func(playerMenu) {
 
     function toggleSimpleMode() {
         document.body.classList.toggle("is-playerSimple");
+        const svg = settingPanel.querySelector("#item-playerSimple__svg");
+        if (document.body.classList.contains("is-playerSimple")) {
+            svg.className = "checked-13adb7";
+        } else {
+            svg.className = "unchecked-b96102";
+        }
         saveData_Refresh();
         resizeWindow();
     }
@@ -84,6 +109,7 @@ function initPkg_Refresh_Video_Set() {
         let retJson = JSON.parse(ret);
         if (retJson.video && retJson.video.status === true) {
             document.body.classList.add("is-playerSimple");
+            gDomObserver.waitForElement('#item-playerSimple__svg').then(svg => svg.className = "checked-13adb7");
         }
     }
 }
