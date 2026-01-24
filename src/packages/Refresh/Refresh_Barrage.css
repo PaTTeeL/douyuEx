@@ -1,3 +1,7 @@
+.Barrage-toolbar {
+    opacity: 0.8;
+}
+
 /* 弹幕简洁模式 */
 #btn-simpleBarrage {
     display: inline-block;
@@ -29,12 +33,15 @@
 }
 
 #btn-simpleBarrage__text::after {
-    content: "前缀";
+    content: "简化前缀";
 }
 
 .is-barrageSimple #btn-simpleBarrage {
     background-color: rgb(18,150,219) !important;
-    color: #fff !important;
+}
+
+.is-barrageSimple #btn-simpleBarrage__text {
+    color: #aaa !important;
 }
 
 /* 其他需要隐藏的元素 */
@@ -56,7 +63,7 @@
 
 /* 隐藏用户排名（拉高弹幕栏） */
 #btn-rankHidden__text::after {
-    content: "拉高";
+    content: "隐藏榜单";
 }
 
 .is-rankHidden .layout-Player-rank,
@@ -72,6 +79,10 @@
     background-color: rgb(18,150,219) !important;
 }
 
+.is-rankHidden #btn-rankHidden__text {
+    color: #aaa !important;
+}
+
 .is-rankHidden #btn-rankHidden__text::after {
-    content: "恢复";
+    content: "恢复榜单";
 }
