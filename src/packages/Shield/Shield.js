@@ -32,6 +32,14 @@ function initPkg_Shield() {
 }
 
 function initPkg_Shield_Enable(domFilterKeywords) {
+  new ResizeObserver(entries => {
+    const asideMainHeight = entries[0].contentRect.height;
+    const headerHeight = document.getElementsByClassName("AssembleExpressHeader-head")[0].offsetHeight;
+    const chatHeight = domFilterKeywords.closest('.layout-Player-chat').offsetHeight;
+    domFilterKeywords.style.setProperty('--filterkeywords-max-height', `calc(${asideMainHeight}px - ${headerHeight}px - ${chatHeight}px)`);
+  }).observe(domFilterKeywords.closest('#js-player-asideMain'));
+  domFilterKeywords.style.maxHeight = "var(--filterkeywords-max-height)";
+  domFilterKeywords.style.overflow = "auto";
   initPkg_Shield_RemoveRepeatedDanmaku(domFilterKeywords);
   initPkg_Shield_RemoveEnter(domFilterKeywords);
   initPkg_Shield_RemoveDanmakuBackground(domFilterKeywords);
