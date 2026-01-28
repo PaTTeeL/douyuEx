@@ -26,55 +26,43 @@ function initPkg_Refresh_Barrage_Dom(toolbar) {
 }
 
 function initPkg_Refresh_Barrage_Func(toolbar, dom_rank) {
-    toolbar.querySelector("#refresh-barrage").addEventListener("click", function() {
-        if (current_barrage_status == 0) {
-            // 简化
-            setRefreshBarrage(toolbar);
-        } else {
-            cancelRefreshBarrage(toolbar);
+    toolbar.addEventListener("click", e => {
+        if (e.target.closest("#refresh-barrage")) {
+            if (current_barrage_status == 0) {
+                // 简化
+                setRefreshBarrage(toolbar);
+            } else {
+                cancelRefreshBarrage(toolbar);
+            }
+            saveData_Refresh();
+        } else if (e.target.closest("#refresh-barrage-frame")) {
+            let dom_activity = document.getElementById("js-room-activity");
+            let dom_topBarrage = toolbar.closest('.Barrage');
+            if (dom_rank.style.display == "none") {
+                // 被拉高
+                dom_rank.style.display = "block";
+                dom_activity.style.display = "block";
+                dom_topBarrage.className = "Barrage";
+                toolbar.querySelector("#refresh-barrage-frame__text").innerText = "拉高";
+            } else {
+                // 没拉高
+                dom_rank.style.display = "none";
+                dom_activity.style.display = "none";
+                dom_topBarrage.className = "Barrage top-0-important";
+                toolbar.querySelector("#refresh-barrage-frame__text").innerText = "恢复";
+            }
+            saveData_Refresh();
         }
-        saveData_Refresh();
-    });
-
-    toolbar.querySelector("#refresh-barrage-frame").addEventListener("click", function() {
-        let dom_activity = document.getElementById("js-room-activity");
-        let dom_topBarrage = toolbar.closest('.Barrage');
-        if (dom_rank.style.display == "none") {
-            // 被拉高
-            dom_rank.style.display = "block";
-            dom_activity.style.display = "block";
-            dom_topBarrage.className = "Barrage";
-            toolbar.querySelector("#refresh-barrage-frame__text").innerText = "拉高";
-        } else {
-            // 没拉高
-            dom_rank.style.display = "none";
-            dom_activity.style.display = "none";
-            dom_topBarrage.className = "Barrage top-0-important";
-            toolbar.querySelector("#refresh-barrage-frame__text").innerText = "恢复";
-        }
-        saveData_Refresh();
     });
 }
 
 function refresh_Barrage_getStatus() {
-    if (current_barrage_status == 1) {
-        // 被简化
-        return true;
-    } else {
-        // 没被简化
-        return false;
-    }
+    return current_barrage_status == 1 ? true : false;
 }
 
 function refresh_BarrageFrame_getStatus() {
     let dom_rank = document.getElementsByClassName("layout-Player-rank")[0];
-    if (dom_rank.style.display == "none") {
-        // 被拉高
-        return true;
-    } else {
-        // 没拉高
-        return false;
-    }
+    return dom_rank ? dom_rank.style.display == "none" : false;
 }
 
 function initPkg_Refresh_Barrage_Set(toolbar, dom_rank) {

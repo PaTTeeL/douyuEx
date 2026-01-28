@@ -4,8 +4,8 @@ function initPkg_Refresh_Video() {
         gDomObserver.waitForElement('.PlayerToolbar'),
     ]).then(([playerMenu, playerToolbar]) => {
         initPkg_Refresh_Video_Dom(playerMenu, playerToolbar);
-        initPkg_Refresh_Video_Func(playerMenu, playerToolbar);
-        initPkg_Refresh_Video_Set(playerMenu, playerToolbar);
+        const setSimpleMode = initPkg_Refresh_Video_Func(playerMenu, playerToolbar);
+        initPkg_Refresh_Video_Set(setSimpleMode);
     });
 }
 
@@ -43,41 +43,42 @@ function initPkg_Refresh_Video_Func(playerMenu, playerToolbar) {
 
 
     function changeToolBarZIndex() {
-        let video_fullPage = false;
+        let video_fullPage = !!(document.querySelector(".wfs-2a8e83.removed-9d4c42") || document.querySelector(".toggle__P8TKM"));
         let video_fullScreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-        let chatPanel_isHidden = false;
-        if (document.querySelector(".wfs-2a8e83.removed-9d4c42")) {
-            video_fullPage = true;
-        } else if (document.querySelector(".toggle__P8TKM")) {
-            video_fullPage = true;
-        }
-        if(document.querySelector(".shrink__Sd0uK")){
-            chatPanel_isHidden = true;
-        }
+        let chatPanel_isHidden = !!document.querySelector(".shrink__Sd0uK");
         const dom_player_toolbar = document.getElementById("js-player-toolbar");
-        dom_player_toolbar.style = video_fullPage? "z-index:20" : "z-index:30";
+        dom_player_toolbar.style = video_fullPage ? "z-index:20" : "z-index:30";
         const dom_casebar = document.getElementsByClassName("case__f4yex")[0];
-        if(dom_casebar){
-            dom_casebar.style = (video_fullScreen || (video_fullPage && chatPanel_isHidden)) && refresh_Video_getStatus() ? "bottom: -84px;" : "bottom: 0;";
-        }
+        if (dom_casebar) dom_casebar.style = (video_fullScreen || (video_fullPage && chatPanel_isHidden)) && refresh_Video_getStatus() ? "bottom: -84px;" : "bottom: 0;";
         const isBeta = !!document.getElementsByClassName("live-next-body")[0];
         if (isBeta) dom_player_toolbar.parentElement.style = "z-index:20";
     }
 
-    playerMenu.querySelector('#refresh-video').addEventListener("click", () => {
+    playerMenu.addEventListener("click", e => {
+        if (!e.target.closest("#refresh-video")) return;
+        setSimpleMode(!refresh_Video_getStatus());
+    });
+    playerToolbar.addEventListener("click", e => {
+        if (!e.target.closest("#refresh-video2")) return;
+        setSimpleMode(!refresh_Video_getStatus());
+    });
+
+    function setSimpleMode(isSimple) {
         let dom_toolbar = playerToolbar.querySelector('.PlayerToolbar-ContentRow');
         let dom_video = playerMenu.closest('.layout-Player-video') || playerMenu.closest('.stream__T55I3');
         let dom_refresh = playerMenu.querySelector('#refresh-video');
         let dom_refresh2 = playerToolbar.querySelector('#refresh-video2');
-        if (dom_toolbar.style.visibility == "hidden") {
+        if (!isSimple) {
             dom_toolbar.style.visibility = "visible";
-            dom_video.style = "";
+            dom_video.style.bottom = "";
+            dom_video.style.zIndex = "";
             dom_refresh2.style.display = "none";
             dom_refresh.innerText = "简洁模式";
             refresh_Video_removeStyle();
         } else {
             dom_toolbar.style.visibility = "hidden";
-            dom_video.style = "bottom:0;z-index:25";
+            dom_video.style.bottom = "0";
+            dom_video.style.zIndex = "25";
             dom_refresh2.style.display = "block";
             dom_refresh.innerText = "✓ 简洁模式";
             refresh_Video_setStyle();
@@ -85,41 +86,18 @@ function initPkg_Refresh_Video_Func(playerMenu, playerToolbar) {
         changeToolBarZIndex();
         saveData_Refresh();
         resizeWindow();
-    });
-    playerToolbar.querySelector('#refresh-video2').addEventListener("click", () => {
-        let dom_toolbar = playerToolbar.querySelector('.PlayerToolbar-ContentRow');
-        let dom_video = playerMenu.closest('.layout-Player-video') || playerMenu.closest('.stream__T55I3');
-        let dom_refresh = playerMenu.querySelector('#refresh-video');
-        let dom_refresh2 = playerToolbar.querySelector('#refresh-video2');
-        if (dom_toolbar.style.visibility == "hidden") {
-            dom_toolbar.style.visibility = "visible";
-            dom_video.style = "";
-            dom_refresh2.style.display = "none";
-            dom_refresh.innerText = "简洁模式";
-            refresh_Video_removeStyle();
-        } else {
-            dom_toolbar.style.visibility = "hidden";
-            dom_video.style = "bottom:0;z-index:25";
-            dom_refresh2.style.display = "block";
-            dom_refresh.innerText = "✓ 简洁模式";
-            refresh_Video_setStyle();
-        }
-        changeToolBarZIndex();
-        saveData_Refresh();
-        resizeWindow();
-    });
+    }
+
+    return setSimpleMode;
 }
 
 function refresh_Video_getStatus() {
     let dom_toolbar = document.getElementsByClassName("PlayerToolbar-ContentRow")[0];
-    if (dom_toolbar.style.visibility == "hidden") {
-        return true;
-    } else {
-        return false;
-    }
+    return dom_toolbar ? dom_toolbar.style.visibility === "hidden" : false;
 }
 // FullPageFollowGuide
-function initPkg_Refresh_Video_Set(playerMenu, playerToolbar) {
+function initPkg_Refresh_Video_Set(setSimpleMode) {
+    if (typeof setSimpleMode !== "function") return;
     let ret = localStorage.getItem("ExSave_Refresh");
     if (ret != null) {
         let retJson = JSON.parse(ret);
@@ -127,27 +105,7 @@ function initPkg_Refresh_Video_Set(playerMenu, playerToolbar) {
             retJson.video = {status: false};
         }
         if (retJson.video.status == true) {
-            let dom_toolbar = playerToolbar.querySelector('.PlayerToolbar-ContentRow');
-            let dom_video = playerMenu.closest('.layout-Player-video') || playerMenu.closest('.stream__T55I3');
-            let dom_refresh2 = playerToolbar.querySelector('#refresh-video2');
-            let dom_refresh = playerMenu.querySelector('#refresh-video');
-            let dom_player_toolbar = playerToolbar.closest('#js-player-toolbar');
-            dom_toolbar.style.visibility = "hidden";
-            dom_video.style = "bottom:0;z-index:25";
-            dom_player_toolbar.style = "z-index:30";
-            let ret = localStorage.getItem("ExSave_FullScreen");
-            if (ret != null) {
-                let retJson = JSON.parse(ret);
-                if (retJson.isFullScreen) {
-                    dom_player_toolbar.style = "z-index:20";
-                }
-            }
-            const isBeta = !!document.getElementsByClassName("live-next-body")[0];
-            if (isBeta) dom_player_toolbar.parentElement.style = "z-index:20";
-            dom_refresh2.style.display = "block";
-            dom_refresh.innerText = "✓ 简洁模式";
-            refresh_Video_setStyle();
-            resizeWindow();
+            setSimpleMode(true);
         }
     }
 }
