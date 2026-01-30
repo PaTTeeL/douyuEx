@@ -24,11 +24,11 @@ function ExpandTool_AutoFish_insertDom() {
 }
 function ExpandTool_AutoFish_insertFunc() {
   document.querySelectorAll('input[name="autofish_mode"]').forEach(radio => {
-    radio.addEventListener("change", saveData_AutoFish);
+    radio.addEventListener("change", saveData_ExpandTool);
   });
   
   document.getElementById("extool__autofish_start").addEventListener("click", async () => {
-    saveData_AutoFish();
+    saveData_ExpandTool();
     const isStart = document.getElementById("extool__autofish_start").checked;
     AutoFish_lockMode(isStart);
     if (!isStart) {
@@ -58,7 +58,7 @@ function ExpandTool_AutoFish_insertFunc() {
       AutoFish_lockMode(false);
       return showMessage("【自动钓鱼】未能获取活动信息", "error");
     }
-    saveData_AutoFish();
+    saveData_ExpandTool();
 
     if (homepageRes.data.fishing.stat == 0) {
       // 未开始钓鱼
@@ -137,49 +137,12 @@ async function endFish() {
   isFishing = false;
 }
 
-function AutoFish_getSave() {
-  let data;
-  try {
-    data = JSON.parse(localStorage.getItem("ExSave_AutoFish"));
-  } catch (e) {
-    data = null;
-  }
-  if (!data || typeof data !== "object") data = {};
-  if (!Array.isArray(data.rids)) data.rids = [];
-  if (!data.modes || typeof data.modes !== "object") data.modes = {};
-  return data;
-}
-
 function AutoFish_lockMode(lock) {
   document.querySelectorAll('input[name="autofish_mode"]').forEach((r) => (r.disabled = lock));
 }
 
-function saveData_AutoFish() {
-  let checkbox = document.getElementById("extool__autofish_start");
-  let modeRadio = document.querySelector('input[name="autofish_mode"]:checked');
-  if (!checkbox || !modeRadio) return;
-
-  let value = checkbox.checked;
-  let mode = modeRadio.value;
-  let data = AutoFish_getSave();
-  
-  if (value) {
-    if (!data.rids.includes(rid)) data.rids.push(rid);
-    data.modes[rid] = mode;
-  } else {
-    data.rids = data.rids.filter((item) => item !== rid);
-    delete data.modes[rid];
-  }
-  
-  localStorage.setItem("ExSave_AutoFish", JSON.stringify(data));
-}
-
-function AutoFish_getRids() {
-  return AutoFish_getSave().rids;
-}
-
 function ExpandTool_AutoFish_Set() {
-  let data = AutoFish_getSave();
+  let data = loadData_ExpandTool("autoFish") || { rids: [], modes: {} };
   if (!data.rids.includes(rid)) return;
   
   // 设置模式（兼容旧版本，默认全天）

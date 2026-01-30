@@ -66,6 +66,15 @@ function initExpandToolCache() {
 function saveData_ExpandTool() {
     if (expandToolCache == null) initExpandToolCache();
 
+    // AutoFish
+    const checkbox = document.getElementById("extool__autofish_start");
+    const modeRadio = document.querySelector('input[name="autofish_mode"]:checked');
+    if (!checkbox || !modeRadio) return;
+    const autoFish = expandToolCache.autoFish || { rids: [], modes: {} };
+    checkbox.checked ? (!autoFish.rids.includes(rid) && autoFish.rids.push(rid), autoFish.modes[rid] = modeRadio.value)
+                     : (autoFish.rids = autoFish.rids.filter(item => item !== rid), delete autoFish.modes[rid])
+
+
     // Player
     expandToolCache.isFullScreen = document.getElementById("extool__fullscreen").checked;
     expandToolCache.isHighestVideoQuality = document.getElementById("extool__highestvideoquality").checked;
