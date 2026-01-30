@@ -15,7 +15,7 @@ function initPkg_ExpandTool_Module() {
     // initPkg_ExpandTool_BarrageSize();
     initPkg_ExpandTool_TabSwitch();
     initPkg_ExpandTool_P2P();
-    initPkg_ExpandTool_FullScreen();
+    initPkg_ExpandTool_Player();
 }
 
 function initPkg_ExpandTool_Dom() {
@@ -66,9 +66,9 @@ function initExpandToolCache() {
 function saveData_ExpandTool() {
     if (expandToolCache == null) initExpandToolCache();
 
-    // FullScreen
-    expandToolCache.isFullScreen = getFullScreen();
-    expandToolCache.isHighestVideoQuality = getHighestVideoQuality();
+    // Player
+    expandToolCache.isFullScreen = document.getElementById("extool__fullscreen").checked;
+    expandToolCache.isHighestVideoQuality = document.getElementById("extool__highestvideoquality").checked;
 
     // 逐步更新：
     // expandToolCache.XXX = getXXX();

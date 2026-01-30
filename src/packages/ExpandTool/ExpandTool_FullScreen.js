@@ -1,4 +1,4 @@
-function initPkg_ExpandTool_FullScreen() {
+function initPkg_ExpandTool_Player() {
     ExpandTool_FullScreen_insertDom();
     ExpandTool_FullScreen_insertFunc();
     ExpandTool_HighestVideoQuality_insertFunc();
@@ -15,44 +15,20 @@ function ExpandTool_FullScreen_insertDom() {
     b.insertBefore(a, b.childNodes[0]);
 }
 
-
-function getFullScreen() {
-    return document.getElementById("extool__fullscreen").checked;
-}
 function ExpandTool_FullScreen_insertFunc() {
     document.getElementById("extool__fullscreen").addEventListener("click", function() {
-        saveData_FullScreen();
-        if (getFullScreen()) {
+        saveData_ExpandTool();
+        if (document.getElementById("extool__fullscreen").checked()) {
             showMessage("刷新页面生效", "success");
         }
     });
 }
 
-function saveData_FullScreen() {
-    let data = {
-        isFullScreen: getFullScreen()
-    }
-    localStorage.setItem("ExSave_FullScreen", JSON.stringify(data));
-}
 function initPkg_ExpandTool_FullScreen_Set() {
     // 设置初始化
-    let ret = localStorage.getItem("ExSave_FullScreen");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.isFullScreen) {
-            document.getElementById("extool__fullscreen").checked = retJson.isFullScreen;
-        }
-    }
-}
-
-
-function initFullScreen() {
-    let ret = localStorage.getItem("ExSave_FullScreen");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.isFullScreen) {
-            fullScreen();
-        }
+    if (loadData_ExpandTool("isFullScreen")) {
+        document.getElementById("extool__fullscreen").checked = retJson.isFullScreen;
+        fullScreen();
     }
 }
 
@@ -80,42 +56,20 @@ function fullScreen() {
     });
 }
 
-function getHighestVideoQuality() {
-    return document.getElementById("extool__highestvideoquality").checked;
-}
 function ExpandTool_HighestVideoQuality_insertFunc() {
     document.getElementById("extool__highestvideoquality").addEventListener("click", function() {
-        saveData_HighestVideoQuality();
-        if (getHighestVideoQuality()) {
+        saveData_ExpandTool();
+        if (document.getElementById("extool__highestvideoquality").checked) {
             showMessage("刷新页面生效", "success");
         }
     });
 }
 
-function saveData_HighestVideoQuality() {
-    let data = {
-        isHighestVideoQuality: getHighestVideoQuality()
-    }
-    localStorage.setItem("ExSave_HighestVideoQuality", JSON.stringify(data));
-}
 function initPkg_ExpandTool_HighestVideoQuality_Set() {
     // 设置初始化
-    let ret = localStorage.getItem("ExSave_HighestVideoQuality");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.isHighestVideoQuality) {
-            document.getElementById("extool__highestvideoquality").checked = retJson.isHighestVideoQuality;
-        }
-    }
-}
-
-function initHighestVideoQuality() {
-    let ret = localStorage.getItem("ExSave_HighestVideoQuality");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.isHighestVideoQuality) {
-            highestVideoQuality();
-        }
+    if (loadData_ExpandTool("isHighestVideoQuality")) {
+        document.getElementById("extool__highestvideoquality").checked = retJson.isHighestVideoQuality;
+        highestVideoQuality();
     }
 }
 
