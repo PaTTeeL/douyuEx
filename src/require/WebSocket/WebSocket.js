@@ -6,13 +6,13 @@
 
 function WebSocket_Packet(str) {
     const MSG_TYPE = 689;
-    let bytesArr = stringToByte(str);   
-    let buffer = new Uint8Array(bytesArr.length + 4 + 4 + 2 + 1 + 1 + 1);
-    let p_content = new Uint8Array(bytesArr.length); // 消息内容
+    let bytesArr = stringToByte(str), length = bytesArr.length;   
+    let buffer = new Uint8Array(length + 4 + 4 + 2 + 1 + 1 + 1);
+    let p_content = new Uint8Array(length); // 消息内容
     for (let i = 0; i < p_content.length; i++) {
         p_content[i] = bytesArr[i];
     }
-    let p_length = new Uint32Array([bytesArr.length + 4 + 2 + 1 + 1 + 1]); // 消息长度
+    let p_length = new Uint32Array([length + 4 + 2 + 1 + 1 + 1]); // 消息长度
     let p_type = new Uint32Array([MSG_TYPE]); // 消息类型
 
     buffer.set(new Uint8Array(p_length.buffer), 0);
@@ -25,8 +25,7 @@ function WebSocket_Packet(str) {
 
 function stringToByte(str) {  
     let bytes = new Array();  
-    let len, c;  
-    len = str.length;  
+    let c, len = str.length;  
     for(let i = 0; i < len; i++) {  
         c = String(str).charCodeAt(i);  
         if(c >= 0x010000 && c <= 0x10FFFF) {  
@@ -52,8 +51,7 @@ function byteToString(arr) {
     if(typeof arr === 'string') {
         return arr;
     }
-    let str = '',
-        _arr = arr;
+    let str = '', _arr = arr;
     for(let i = 0; i < _arr.length; i++) {
         let one = _arr[i].toString(2),
             v = one.match(/^1+?(?=0)/);
@@ -74,8 +72,9 @@ return str;
 
 
 function hex2bin(e) {
-    if ("string" === typeof e && e.length % 8 === 0) {
-        for (let r = [], t = e.length, o = 0; o < t;) r.push(e.substr(o, 2)), o += 2;
+    const length = e.length;
+    if ("string" === typeof e && length % 8 === 0) {
+        for (let r = [], t = length, o = 0; o < t;) r.push(e.substr(o, 2)), o += 2;
         for (let n = [], i = r.length, s = 0; s < i;) n.push(parseInt(r.slice(s, s + 4).reverse().join(""), 16)), s += 4;
         return n
     }

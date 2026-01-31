@@ -437,9 +437,11 @@ function sheet2blob(sheet, sheetName) {
 	var blob = new Blob([s2ab(wbout)], {type:"application/octet-stream"});
 	// 字符串转ArrayBuffer
 	function s2ab(s) {
-		var buf = new ArrayBuffer(s.length);
+		if (typeof s !== 'string') return new ArrayBuffer(0);
+		var len = s.length;
+		var buf = new ArrayBuffer(len);
 		var view = new Uint8Array(buf);
-		for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+		for (var i=0; i < len; ++i) view[i] = s.charCodeAt(i) & 0xFF;
 		return buf;
 	}
 	return blob;
@@ -458,13 +460,12 @@ function downloadFile(name, data) {
 } 
 
 function timeText2Ms(text) {
-	let ret = 0;
-	let arr = text.split(":");
-	if (arr.length === 1) {
+	let ret = 0, arr = text.split(":"), length = arr.length;
+	if (length === 1) {
 		ret = Number(arr[0]);
-	} else if (arr.length === 2) {
+	} else if (length === 2) {
 		ret = Number(arr[0]) * 60 + Number(arr[1]);
-	} else if (arr.length === 3) {
+	} else if (length === 3) {
 		ret = Number(arr[0]) * 3600 + Number(arr[1]) * 60 + Number(arr[2]);
 	}
 	return ret * 1000;
