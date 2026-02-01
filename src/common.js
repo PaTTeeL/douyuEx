@@ -542,18 +542,29 @@ function getValidDomList(queryList) {
 /*
  * gDomObserver - 全局 DOM 观察服务单例。
  *   - 复用单个 MutationObserver 实例观察 DOM 结构变化，避免重复创建观察器，
- *   - 提供 waitForElement(selector) 方法，返回一个Promise并在目标元素出现时立刻完成，
- *   - 使用 listeners(任务队列) 与 pendingMap(去重) 统一管理所有"等待元素出现"的任务，
- *   - 相同 selector 会自动合并，共享同一个 Promise，
- *   - 不同 selector 的观察任务会加入队列并逐一检查，
- *   - 元素出现后立即 resolve 并从队列中移除，
- *   - 队列为空时自动停止观察服务以节省资源。
+ *   - 提供 waitForElement(selector) 方法，返回 Promise，目标元素出现时 resolve，超时则 reject，
+ *   - 使用 listeners（任务队列）与 pendingMap（去重索引）管理所有等待任务，二者始终保持同步，
+ *   - 相同 selector 的多次调用自动合并，共享同一个 Promise，
+ *   - 元素出现后立即 resolve 并将任务从队列中移除，
+ *   - 队列清空后自动断开观察器以释放资源。
  */
 const gDomObserver = (function() {
     let _observer = null;
     const listeners = [];
     const pendingMap = new Map();
     const root = document.body || document.documentElement || document;
+    function _parseTimeout(timeout) {
+        if (timeout == null) return null;
+        if (typeof timeout === "number") return timeout >= 0 ? timeout : null;
+        if (typeof timeout === "string") {
+            const num = parseFloat(timeout);
+            if (isNaN(num) || num < 0) return null;
+            const raw = timeout.trim();
+            if (/^\d+(\.\d+)?\s*s$/i.test(raw)) return num * 1000;
+            return num; // 默认 ms
+        }
+        return null;
+    }
     function _queryElements(selector) {
         if (typeof selector !== 'string' || !selector.trim()) return null;
         try {
@@ -563,14 +574,20 @@ const gDomObserver = (function() {
         }
     }
     function _checkElements() {
-        let write = 0;
+        let write = 0, current = performance.now();
         for (let read = 0, length = listeners.length; read < length; read++) {
-            const item = listeners[read];
-            const element = _queryElements(item.selector);
+            const item = listeners[read], selector = item.selector;
+            if (current >= item.deadline) {
+                item.reject(new Error(`waitForElement timeout: ${selector}`));
+                console.log("DouyuEX gDomObserver: 计时到达上限，终止等待任务", selector);
+                pendingMap.delete(selector);
+                continue;
+            }
+            const element = _queryElements(selector);
             if (element) {
                 item.resolve(element);
-                pendingMap.delete(item.selector);
-                //console.log("DouyuEX gDomObserver: 目标元素出现，返回查询结果", element);
+                console.log("DouyuEX gDomObserver: 目标元素出现，返回查询结果", element);
+                pendingMap.delete(selector);
             } else {
                 listeners[write++] = item;
             }
@@ -579,35 +596,63 @@ const gDomObserver = (function() {
         if (write === 0 && _observer) {
             _observer.disconnect();
             _observer = null;
-            console.log("DouyuEX gDomObserver: 完成所有任务，停止观察实例");
+            console.log("DouyuEX gDomObserver: 任务队列清空，停止观察实例");
         }
     }
     return {
         /*
          * 异步等待指定选择器对应的元素出现在 DOM 中。
-         * @param {string} selector - CSS 选择器字符串。
-         * @return {Promise<Element>} - 返回一个 Promise，并在目标元素出现时立刻完成。
-         * 使用示例：
-         *   gDomObserver.waitForElement('#id').then(e => {
-         *       console.log('元素已出现:', e);
-         *   });
+         * @param  {string} selector - CSS 选择器字符串
+         * @param  {number|string|null} [timeout=null] - 超时时间：数字（毫秒）/ 字符串（"500ms"、"2s"）/ null（无限等待）
+         * @return {Promise<Element>} - 元素出现时 resolve(Element)，超时则 reject(Error)
+         * 说明：
+         * 1. 若元素已存在，立即 resolve，不创建监听任务；
+         * 2. 若元素不存在，则使用 MutationObserver 监听 DOM 变化，直到元素出现或超时；
+         * 3. 相同 selector 的多次调用会自动合并为同一个等待任务，共享同一个 Promise；
+         * 4. 合并任务时，截止时间取多次调用中最晚的一个，避免提前终止；
+         * 5. 未设置超时或传入 null，则无限等待直到元素出现。
+         * 示例：
+         * // 基本用法：等待元素出现并设置超时（5 秒）
+         * gDomObserver.waitForElement('#id', 5000).then(element => {
+         *     console.log('元素已出现:', element);
+         * }).catch(err => {
+         *     console.warn('等待超时:', err);
+         * });
          */
-        waitForElement(selector) {
+        waitForElement(selector, timeout = null) {
             selector = typeof selector === "string" ? selector.trim() : "";
             if (!selector) return Promise.resolve(null);
-            const existing = pendingMap.get(selector);
-            if (existing) {
-                console.log("DouyuEX gDomObserver: 目标元素重复，合并等待任务", selector);
-                return existing.promise;
-            }
             const element = _queryElements(selector);
+            const existing = pendingMap.get(selector);
             if (element) {
-                //console.log("DouyuEX gDomObserver: 目标元素存在，立刻返回结果", existingElement);
+                if (existing) {
+                    existing.resolve(element);
+                    pendingMap.delete(selector);
+                    console.log("DouyuEX gDomObserver: 目标元素存在，结算存量任务", element);
+                } else {
+                    console.log("DouyuEX gDomObserver: 目标元素存在，直接返回结果", element);
+                }
                 return Promise.resolve(element);
             }
-            let resolveFn;
-            const promise = new Promise(resolve => { resolveFn = resolve; });
-            const listener = { selector, resolve: resolveFn, promise };
+            const parsedTimeout = _parseTimeout(timeout), current = performance.now();
+            if (existing) {
+                console.log("DouyuEX gDomObserver: 目标元素重复，合并等待任务", selector);
+                if (parsedTimeout == null) {
+                    existing.deadline = Infinity;
+                    console.log("DouyuEX gDomObserver: 超时未设限制，任务永不过期");
+                } else {
+                    existing.deadline = Math.max(existing.deadline, current + parsedTimeout);
+                    console.log("DouyuEX gDomObserver: 截止时间延后，剩余", existing.deadline === Infinity ? "∞" : Math.max(0, existing.deadline - current).toFixed(0), "ms");
+                }
+                return existing.promise;
+            }
+            const deadline = parsedTimeout == null ? Infinity : current + parsedTimeout;
+            let resolveFn, rejectFn;
+            const promise = new Promise((resolve, reject) => {
+                resolveFn = resolve;
+                rejectFn = reject;
+            });
+            const listener = { selector, deadline, promise, resolve: resolveFn, reject: rejectFn };
             pendingMap.set(selector, listener);
             listeners.push(listener);
             if (!_observer) {
