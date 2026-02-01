@@ -554,6 +554,17 @@ const gDomObserver = (function() {
     const listeners = [];
     const pendingMap = new Map();
     const root = document.body || document.documentElement || document;
+    function parseTimeout(timeout) {
+        if (timeout == null) return null;
+        if (typeof timeout === "number") return timeout;
+        if (typeof timeout === "string") {
+            const t = timeout.trim().toLowerCase();
+            if (t.endsWith("ms")) return parseFloat(t);
+            if (t.endsWith("s")) return parseFloat(t) * 1000;
+            return parseFloat(t); // 默认 ms
+        }
+        return null;
+    }
     function _queryElements(selector) {
         if (typeof selector !== 'string' || !selector.trim()) return null;
         try {
@@ -563,9 +574,15 @@ const gDomObserver = (function() {
         }
     }
     function _checkElements() {
+        const now = performance.now();
         let write = 0, length = listeners.length;
         for (let read = 0; read < length; read++) {
             const item = listeners[read];
+            if (item.deadline !== Infinity && now >= item.deadline) {
+                item.reject(new Error(`waitForElement timeout: ${item.selector}`));
+                pendingMap.delete(item.selector);
+                continue;
+            }
             const element = _queryElements(item.selector);
             if (element) {
                 item.resolve(element);
@@ -592,12 +609,22 @@ const gDomObserver = (function() {
          *       console.log('元素已出现:', e);
          *   });
          */
-        waitForElement(selector) {
+        waitForElement(selector, timeout = null) {
             selector = typeof selector === "string" ? selector.trim() : "";
             if (!selector) return Promise.resolve(null);
+            const now = performance.now();
+            const parsedTimeout = parseTimeout(timeout);
             const existing = pendingMap.get(selector);
             if (existing) {
                 console.log("DouyuEX gDomObserver: 目标元素重复，合并等待任务", selector);
+                if (parsedTimeout == null) {
+                    console.log("DouyuEX gDomObserver: 合并等待任务并取消超时", selector);
+                    existing.deadline = Infinity;
+                } else {
+                    const newDeadline = now + parsedTimeout;
+                    existing.deadline = Math.max(existing.deadline, newDeadline);
+                    console.log("DouyuEX gDomObserver: 合并等待任务，超时时长设为", existing.deadline);
+                }
                 return existing.promise;
             }
             const element = _queryElements(selector);
@@ -605,9 +632,20 @@ const gDomObserver = (function() {
                 //console.log("DouyuEX gDomObserver: 目标元素存在，立刻返回结果", existingElement);
                 return Promise.resolve(element);
             }
-            let resolveFn;
-            const promise = new Promise(resolve => { resolveFn = resolve; });
-            const listener = { selector, resolve: resolveFn, promise };
+            let resolveFn, rejectFn;
+            const promise = new Promise((resolve, reject) => {
+                resolveFn = resolve;
+                rejectFn = reject;
+            });
+            const deadline =
+                parsedTimeout == null ? Infinity : now + parsedTimeout;
+            const listener = {
+                selector,
+                resolve: resolveFn,
+                reject: rejectFn,
+                promise,
+                deadline
+            };
             pendingMap.set(selector, listener);
             listeners.push(listener);
             if (!_observer) {
