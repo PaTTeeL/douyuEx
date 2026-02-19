@@ -548,11 +548,10 @@ function getValidDomList(queryList) {
  *   - 元素出现后立即 resolve 并将任务从队列中移除，
  *   - 队列清空后自动断开观察器以释放资源。
  */
-const gDomObserver = (function() {
+const gDomObserver = (() => {
     let _observer = null;
     const listeners = [];
     const pendingMap = new Map();
-    const root = document.body || document.documentElement || document;
     function _parseTimeout(timeout) {
         if (timeout == null) return null;
         if (typeof timeout === "number") return timeout >= 0 ? timeout : null;
@@ -574,30 +573,34 @@ const gDomObserver = (function() {
         }
     }
     function _checkElements() {
-        let write = 0, current = performance.now();
-        for (let read = 0, length = listeners.length; read < length; read++) {
-            const item = listeners[read], selector = item.selector;
-            if (current >= item.deadline) {
-                item.reject(new Error(`waitForElement timeout: ${selector}`));
-                console.log("DouyuEX gDomObserver: 计时到达上限，终止等待任务", selector);
-                pendingMap.delete(selector);
-                continue;
+        if (_checkElements.timeoutId) cancelAnimationFrame(_checkElements.timeoutId);
+        _checkElements.timeoutId = requestAnimationFrame(() => {
+            let write = 0, current = performance.now();
+            for (let read = 0, length = listeners.length; read < length; read++) {
+                const item = listeners[read], selector = item.selector;
+                if (current >= item.deadline) {
+                    item.reject(new Error(`waitForElement timeout: ${selector}`));
+                    console.log("DouyuEX gDomObserver: 计时到达上限，终止等待任务", selector);
+                    pendingMap.delete(selector);
+                    continue;
+                }
+                const element = _queryElements(selector);
+                if (element) {
+                    item.resolve(element);
+                    console.log("DouyuEX gDomObserver: 目标元素出现，返回查询结果", element);
+                    pendingMap.delete(selector);
+                } else {
+                    listeners[write++] = item;
+                }
             }
-            const element = _queryElements(selector);
-            if (element) {
-                item.resolve(element);
-                console.log("DouyuEX gDomObserver: 目标元素出现，返回查询结果", element);
-                pendingMap.delete(selector);
-            } else {
-                listeners[write++] = item;
+            listeners.length = write;
+            if (write === 0 && _observer) {
+                _observer.disconnect();
+                _observer = null;
+                console.log("DouyuEX gDomObserver: 任务队列清空，停止观察实例");
             }
-        }
-        listeners.length = write;
-        if (write === 0 && _observer) {
-            _observer.disconnect();
-            _observer = null;
-            console.log("DouyuEX gDomObserver: 任务队列清空，停止观察实例");
-        }
+            _checkElements.timeoutId = null;
+        });
     }
     return {
         /*
@@ -656,11 +659,12 @@ const gDomObserver = (function() {
             pendingMap.set(selector, listener);
             listeners.push(listener);
             if (!_observer) {
+                const root = document.body || document.documentElement || document;
                 _observer = new MutationObserver(_checkElements);
                 _observer.observe(root, { childList: true, subtree: true });
-                console.log("DouyuEX gDomObserver: 启动观察实例，创建等待任务", selector);
+                console.log("DouyuEX gDomObserver: 启动观察实例，创建首个任务", selector);
             } else {
-                console.log("DouyuEX gDomObserver: 复用观察实例，加入等待队列", selector);
+                console.log("DouyuEX gDomObserver: 复用观察实例，加入任务队列", selector);
             }
             return promise;
         }
