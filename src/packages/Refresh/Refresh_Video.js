@@ -103,6 +103,14 @@ function initPkg_Refresh_Video_Func(playerDialog, settingPanel) {
         clearTimeout(timer_timeout);
     });
     gDomObserver.waitForElement('.room-Player-Box').then(dom_video => {
+        const playerControlbar = document.getElementById("js-player-controlbar");
+        gHotkey.add("d", () => {
+            const showdanmuWrap = playerControlbar.querySelector('.showdanmuWrap-9c22cd');
+            if (!showdanmuWrap) return;
+            const isHidden = showdanmuWrap.classList.contains('removed-304d55');
+            const targetBtn = isHidden ? showdanmuWrap.nextElementSibling : showdanmuWrap.querySelector('.icon-c8be96');
+            if (targetBtn) targetBtn.click();
+        });
         dom_video.addEventListener("mousemove", () => {
             document.body.classList.add("simple-show");
             clearTimeout(timer_timeout);
