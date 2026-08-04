@@ -65,3 +65,23 @@ function initPkg_ExpandTool_Func() {
         });
     }
 }
+
+let expandToolCache = null;
+const EXPANDTOOL_KEY = "ExSave_ExpandTool";
+function initExpandToolCache() {
+	try {
+		expandToolCache = JSON.parse(localStorage.getItem(EXPANDTOOL_KEY)) || {};
+	} catch (err) {
+		console.warn("DouyuEx: ExSave_ExpandTool JSON 解析失败", err);
+		expandToolCache = {};
+	}
+}
+function saveData_ExpandTool(key, value) {
+	if (expandToolCache === null) initExpandToolCache();
+	expandToolCache[key] = value;
+	localStorage.setItem(EXPANDTOOL_KEY, JSON.stringify(expandToolCache));
+}
+function loadData_ExpandTool(key) {
+	if (expandToolCache === null) initExpandToolCache();
+	return expandToolCache[key];
+}

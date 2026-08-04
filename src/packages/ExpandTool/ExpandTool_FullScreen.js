@@ -16,44 +16,39 @@ function ExpandTool_FullScreen_insertDom() {
     );
 }
 
-
-function getFullScreen() {
-    return document.getElementById("extool__fullscreen").checked;
-}
 function ExpandTool_FullScreen_insertFunc() {
-    document.getElementById("extool__fullscreen").addEventListener("click", function() {
-        saveData_FullScreen();
-        if (getFullScreen()) {
+    const checkbox = document.getElementById("extool__fullscreen");
+    checkbox.addEventListener("click", function() {
+        const isFullScreenPage = checkbox.checked;
+        saveData_ExpandTool("isFullScreenPage", isFullScreenPage);
+        if (isFullScreenPage) {
             showMessage("刷新页面生效", "success");
         }
     });
 }
 
-function saveData_FullScreen() {
-    let data = {
-        isFullScreen: getFullScreen()
-    }
-    localStorage.setItem("ExSave_FullScreen", JSON.stringify(data));
-}
 function initPkg_ExpandTool_FullScreen_Set() {
-    // 设置初始化
-    let ret = localStorage.getItem("ExSave_FullScreen");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.isFullScreen) {
-            document.getElementById("extool__fullscreen").checked = retJson.isFullScreen;
+    let isFullScreenPage = loadData_ExpandTool("isFullScreenPage");
+    // 旧设置迁移
+    if (isFullScreenPage === undefined) {
+        try {
+            const old = JSON.parse(localStorage.getItem("ExSave_FullScreen") || {}).isFullScreen;
+            isFullScreenPage = typeof old === "boolean" ? old : false;
+        } catch (err) {
+            isFullScreenPage = false;
         }
+        saveData_ExpandTool("isFullScreenPage", isFullScreenPage);
+        localStorage.removeItem("ExSave_FullScreen");
+    }
+    // 设置初始化
+    if (isFullScreenPage) {
+        document.getElementById("extool__fullscreen").checked = true;
     }
 }
-
 
 function initFullScreen() {
-    let ret = localStorage.getItem("ExSave_FullScreen");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.isFullScreen) {
-            fullScreen();
-        }
+    if (loadData_ExpandTool("isFullScreenPage")) {
+        fullScreen();
     }
 }
 
@@ -64,42 +59,39 @@ function fullScreen() {
     });
 }
 
-function getHighestVideoQuality() {
-    return document.getElementById("extool__highestvideoquality").checked;
-}
 function ExpandTool_HighestVideoQuality_insertFunc() {
-    document.getElementById("extool__highestvideoquality").addEventListener("click", function() {
-        saveData_HighestVideoQuality();
-        if (getHighestVideoQuality()) {
+    const checkbox = document.getElementById("extool__highestvideoquality");
+    checkbox.addEventListener("click", function() {
+        const isHighestVideoQuality = checkbox.checked;
+        saveData_ExpandTool("isHighestVideoQuality", isHighestVideoQuality);
+        if (isHighestVideoQuality) {
             showMessage("刷新页面生效", "success");
         }
     });
 }
 
-function saveData_HighestVideoQuality() {
-    let data = {
-        isHighestVideoQuality: getHighestVideoQuality()
-    }
-    localStorage.setItem("ExSave_HighestVideoQuality", JSON.stringify(data));
-}
 function initPkg_ExpandTool_HighestVideoQuality_Set() {
-    // 设置初始化
-    let ret = localStorage.getItem("ExSave_HighestVideoQuality");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.isHighestVideoQuality) {
-            document.getElementById("extool__highestvideoquality").checked = retJson.isHighestVideoQuality;
+    let isHighestVideoQuality = loadData_ExpandTool("isHighestVideoQuality");
+    // 旧设置迁移
+    if (isHighestVideoQuality === undefined) {
+        try {
+            const old = JSON.parse(localStorage.getItem("ExSave_HighestVideoQuality") || {}).isHighestVideoQuality;
+            isHighestVideoQuality = typeof old === "boolean" ? old : false;
+        } catch (err) {
+            isHighestVideoQuality = false;
         }
+        saveData_ExpandTool("isHighestVideoQuality", isHighestVideoQuality);
+        localStorage.removeItem("ExSave_HighestVideoQuality");
+    }
+    // 设置初始化
+    if (isHighestVideoQuality) {
+        document.getElementById("extool__highestvideoquality").checked = true;
     }
 }
 
 function initHighestVideoQuality() {
-    let ret = localStorage.getItem("ExSave_HighestVideoQuality");
-    if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if (retJson.isHighestVideoQuality) {
-            highestVideoQuality();
-        }
+    if (loadData_ExpandTool("isHighestVideoQuality")) {
+        highestVideoQuality();
     }
 }
 
