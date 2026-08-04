@@ -1,23 +1,23 @@
-function initPkg_ExpandTool_FullScreen() {
-    ExpandTool_FullScreen_insertDom();
-    ExpandTool_FullScreen_insertFunc();
-    ExpandTool_HighestVideoQuality_insertFunc();
-    initPkg_ExpandTool_FullScreen_Set();
+function initPkg_ExpandTool_Player() {
+    initPkg_ExpandTool_Player_insertDom();
+    initPkg_ExpandTool_FullScreenPage_Set();
+    initPkg_ExpandTool_FullScreenPage_insertFunc();
     initPkg_ExpandTool_HighestVideoQuality_Set();
+    initPkg_ExpandTool_HighestVideoQuality_insertFunc();
 }
 
-function ExpandTool_FullScreen_insertDom() {
+function initPkg_ExpandTool_Player_insertDom() {
     document.getElementsByClassName("extool")[0].insertAdjacentHTML(
         "afterbegin",
         `<span>
-            <label title="自动网页全屏"><input id="extool__fullscreen" type="checkbox">自动网页全屏</label>
-            <label title="自动最高画质"><input id="extool__highestvideoquality" type="checkbox">自动最高画质</label>    
+            <label title="自动网页全屏"><input id="extool__fullscreenpage" type="checkbox">自动网页全屏</label>
+            <label title="自动最高画质"><input id="extool__highestvideoquality" type="checkbox">自动最高画质</label>
         </span>`
     );
 }
 
-function ExpandTool_FullScreen_insertFunc() {
-    const checkbox = document.getElementById("extool__fullscreen");
+function initPkg_ExpandTool_FullScreenPage_insertFunc() {
+    const checkbox = document.getElementById("extool__fullscreenpage");
     checkbox.addEventListener("click", function() {
         const isFullScreenPage = checkbox.checked;
         saveData_ExpandTool("isFullScreenPage", isFullScreenPage);
@@ -27,7 +27,7 @@ function ExpandTool_FullScreen_insertFunc() {
     });
 }
 
-function initPkg_ExpandTool_FullScreen_Set() {
+function initPkg_ExpandTool_FullScreenPage_Set() {
     let isFullScreenPage = loadData_ExpandTool("isFullScreenPage");
     // 旧设置迁移
     if (isFullScreenPage === undefined) {
@@ -42,24 +42,24 @@ function initPkg_ExpandTool_FullScreen_Set() {
     }
     // 设置初始化
     if (isFullScreenPage) {
-        document.getElementById("extool__fullscreen").checked = true;
+        document.getElementById("extool__fullscreenpage").checked = true;
     }
 }
 
-function initFullScreen() {
+function initFullScreenPage() {
     if (loadData_ExpandTool("isFullScreenPage")) {
-        fullScreen();
+        fullScreenPage();
     }
 }
 
-function fullScreen() {
+function fullScreenPage() {
     gDomObserver.waitForElement('.wfs-2a8e83, .icon-c8be96:has([d="M20 25h6v-6M14 7H8v6"])').then(fullScreenPageButton => {
         console.log("DouyuEx 自动网页全屏: 点击 fullScreenPageButton", fullScreenPageButton);
         fullScreenPageButton.click();
     });
 }
 
-function ExpandTool_HighestVideoQuality_insertFunc() {
+function initPkg_ExpandTool_HighestVideoQuality_insertFunc() {
     const checkbox = document.getElementById("extool__highestvideoquality");
     checkbox.addEventListener("click", function() {
         const isHighestVideoQuality = checkbox.checked;
